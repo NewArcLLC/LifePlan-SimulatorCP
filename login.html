@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ログイン — LifePlan Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5f0;--surface:#fff;--surface2:#f0ede6;
+  --border:#e2ddd5;--border2:#ccc7bc;
+  --text:#1a1714;--text2:#5c5751;--text3:#9b9590;
+  --accent:#1e4d8c;--accent-light:#e8eef7;--accent-mid:#3a72c0;
+  --ng:#8a1c1c;--ng-bg:#fce8e8;
+  --radius:10px;--radius-sm:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Noto Sans JP',sans-serif;
+  background:var(--accent);
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  padding:1.5rem;
+  position:relative;overflow:hidden;
+}
+.bg-deco{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 40% at 10% 20%,rgba(255,255,255,.06) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 60% at 90% 80%,rgba(255,255,255,.04) 0%,transparent 60%);
+}
+.card{
+  background:#fff;border-radius:16px;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);
+  padding:2.5rem 2rem 2rem;
+  width:100%;max-width:420px;position:relative;
+}
+.logo{display:flex;align-items:center;gap:14px;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+.logo-icon{
+  width:48px;height:48px;background:var(--accent);border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+  box-shadow:0 4px 12px rgba(30,77,140,.3);flex-shrink:0;
+}
+.logo-name{font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--accent)}
+.logo-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.fields{display:flex;flex-direction:column;gap:1.1rem;margin-bottom:1.25rem}
+.field{display:flex;flex-direction:column;gap:5px}
+.lbl{font-size:11px;font-weight:700;color:var(--text2)}
+.pw-wrap{position:relative}
+input[type=text],input[type=password]{
+  width:100%;padding:10px 13px;
+  border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;
+  transition:border-color .15s,box-shadow .15s;
+}
+.pw-wrap input{padding-right:42px}
+input:focus{outline:none;border-color:var(--accent-mid);box-shadow:0 0 0 3px rgba(58,114,192,.12);background:#fff}
+.eye-btn{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;
+  display:flex;align-items:center;
+}
+.eye-btn:hover{color:var(--accent)}
+.err{
+  background:var(--ng-bg);color:var(--ng);
+  border:1px solid #f0a0a0;border-radius:var(--radius-sm);
+  padding:8px 12px;font-size:12px;font-weight:500;display:none;
+}
+.login-btn{
+  width:100%;padding:12px;background:var(--accent);color:#fff;
+  border:none;border-radius:var(--radius-sm);
+  font-size:14px;font-weight:700;font-family:inherit;
+  cursor:pointer;transition:all .15s;
+  box-shadow:0 4px 12px rgba(30,77,140,.25);
+}
+.login-btn:hover{background:#163d72;transform:translateY(-1px)}
+.login-btn:active{transform:none}
+.links{display:flex;flex-direction:column;gap:6px;margin-top:1rem;align-items:center}
+.link-btn{
+  display:flex;align-items:center;gap:6px;
+  background:none;border:none;font-size:12px;color:var(--text3);font-family:inherit;
+  cursor:pointer;text-decoration:underline;text-underline-offset:2px;
+  transition:color .15s;
+}
+.link-btn:hover{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="bg-deco"></div>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">🏠</div>
+    <div>
+      <div class="logo-name">LifePlan Simulator</div>
+      <div class="logo-sub">NewArc LLC — 不動産営業支援ツール</div>
+    </div>
+  </div>
+  <div class="fields">
+    <div class="field">
+      <label class="lbl">ログインID</label>
+      <input type="text" id="loginId" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPw').focus()" oninput="clearErr()">
+    </div>
+    <div class="field">
+      <label class="lbl">パスワード</label>
+      <div class="pw-wrap">
+        <input type="password" id="loginPw" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" oninput="clearErr()">
+        <button class="eye-btn" onclick="togglePw()" type="button">
+          <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="err" id="loginErr">IDまたはパスワードが正しくありません</div>
+    <button class="login-btn" onclick="doLogin()">ログイン</button>
+  </div>
+  <div class="links">
+    <a href="https://newarcllc.github.io/LifePlan-Simulatormanual/" target="_blank" rel="noopener noreferrer" class="link-btn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      操作マニュアルを見る
+    </a>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'lps_users';
+const SESSION_KEY = 'lps_session';
+const ADMIN_ID    = 'NewArcAdmin';
+const ADMIN_PW    = 'NewArcAdmin2026';
+
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+}
+
+function getTodayYMD() {
+  const d = new Date();
+  return d.getFullYear().toString()
+    + String(d.getMonth()+1).padStart(2,'0')
+    + String(d.getDate()).padStart(2,'0');
+}
+
+function doLogin() {
+  const id = document.getElementById('loginId').value.trim();
+  const pw = document.getElementById('loginPw').value.trim();
+  const err = document.getElementById('loginErr');
+
+  // 管理者ログイン
+  if (id === ADMIN_ID && pw === ADMIN_PW) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ id, role:'admin', at: Date.now() }));
+    location.href = 'admin.html';
+    return;
+  }
+
+  // 一般ユーザー: 日付PW OR 管理者発行PW
+  const users = getUsers();
+  const ymd   = getTodayYMD();
+
+  // 旧来の日付PW（NewArcLLC + 今日の日付）は引き続き使用可能
+  if (id === 'NewArcLLC' && pw === ymd) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ id, role:'user', at: Date.now() }));
+    location.href = 'life-plan-simulator.html';
+    return;
+  }
+
+  // 管理者発行ユーザー
+  const user = users.find(u => u.id === id && u.pw === pw && u.active);
+  if (user) {
+    // 有効期限チェック
+    if (user.expiresAt && Date.now() > user.expiresAt) {
+      err.textContent = 'このアカウントの有効期限が切れています';
+      err.style.display = 'block';
+      document.getElementById('loginPw').value = '';
+      return;
+    }
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ id, role:'user', at: Date.now() }));
+    location.href = 'life-plan-simulator.html';
+    return;
+  }
+
+  err.textContent = 'IDまたはパスワードが正しくありません';
+  err.style.display = 'block';
+  document.getElementById('loginPw').value = '';
+  document.getElementById('loginPw').focus();
+}
+
+function clearErr() { document.getElementById('loginErr').style.display = 'none'; }
+
+function togglePw() {
+  const pw = document.getElementById('loginPw');
+  const ic = document.getElementById('eyeIcon');
+  if (pw.type === 'password') {
+    pw.type = 'text';
+    ic.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    pw.type = 'password';
+    ic.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
+// すでにセッションがあればシミュレーターへ
+(function(){
+  const s = JSON.parse(localStorage.getItem(SESSION_KEY)||'null');
+  if (s && s.role === 'user' && (Date.now() - s.at) < 8*60*60*1000) {
+    location.href = 'life-plan-simulator.html';
+  }
+})();
+</script>
+</body>
+</html>

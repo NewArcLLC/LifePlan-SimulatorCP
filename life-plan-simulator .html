@@ -1,0 +1,2083 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>簡易ライフプランシミュレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #f7f5f0;
+  --surface: #ffffff;
+  --surface2: #f0ede6;
+  --border: #e2ddd5;
+  --border2: #ccc7bc;
+  --text: #1a1714;
+  --text2: #5c5751;
+  --text3: #9b9590;
+  --accent: #1e4d8c;
+  --accent-light: #e8eef7;
+  --accent-mid: #3a72c0;
+  --ok: #0a6640;
+  --ok-bg: #e6f4ed;
+  --warn: #8a5a00;
+  --warn-bg: #fdf3e0;
+  --ng: #8a1c1c;
+  --ng-bg: #fce8e8;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.07);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Noto Sans JP',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  font-size:14px;
+  line-height:1.6;
+}
+.header{
+  background:var(--accent);color:#fff;
+  padding:1.25rem 2rem;
+  display:flex;align-items:center;gap:1rem;
+  position:sticky;top:0;z-index:100;
+  box-shadow:var(--shadow-lg);
+}
+.header-icon{
+  width:36px;height:36px;background:rgba(255,255,255,0.15);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+.header-title{font-family:'DM Serif Display',serif;font-size:1.25rem;letter-spacing:.02em}
+.header-sub{font-size:11px;opacity:.7;margin-top:1px}
+.header-right{margin-left:auto;font-size:11px;opacity:.65}
+.fp-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;
+  background:#fff;
+  color:var(--accent);
+  border:none;border-radius:var(--radius-sm);
+  font-size:12px;font-weight:700;
+  font-family:'Noto Sans JP',sans-serif;
+  text-decoration:none;
+  white-space:nowrap;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+  transition:all .18s;
+  flex-shrink:0;
+}
+.fp-btn:hover{
+  background:var(--accent-light);
+  box-shadow:0 4px 14px rgba(0,0,0,0.22);
+  transform:translateY(-1px);
+}
+.fp-btn:active{transform:translateY(0);box-shadow:0 2px 6px rgba(0,0,0,0.15)}
+@media(max-width:520px){
+  .fp-btn span.fp-label{display:none}
+  .fp-btn{padding:8px 11px}
+}
+
+.container{max-width:960px;margin:0 auto;padding:1.5rem 1rem 3rem}
+
+.step-nav{
+  display:flex;gap:3px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:5px;margin-bottom:1.5rem;overflow-x:auto;box-shadow:var(--shadow);
+}
+.sn-btn{
+  flex:1;min-width:80px;padding:7px 6px;font-size:11px;font-weight:500;
+  border:none;border-radius:var(--radius-sm);background:transparent;cursor:pointer;
+  color:var(--text3);transition:all .2s;white-space:nowrap;font-family:'Noto Sans JP',sans-serif;
+}
+.sn-btn:hover{background:var(--surface2);color:var(--text2)}
+.sn-btn.active{background:var(--accent);color:#fff}
+.sn-btn .step-num{display:block;font-size:9px;margin-bottom:1px;opacity:.7}
+
+.section{display:none;animation:fadeIn .2s ease}
+.section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:1.25rem 1.5rem;margin-bottom:1rem;box-shadow:var(--shadow);
+}
+.card-title{
+  font-size:13px;font-weight:700;color:var(--accent);
+  margin-bottom:1rem;display:flex;align-items:center;gap:8px;
+  padding-bottom:.75rem;border-bottom:1px solid var(--border);
+}
+.card-title svg{flex-shrink:0}
+.badge{font-size:10px;padding:2px 7px;border-radius:999px;font-weight:500;}
+.badge-req{background:var(--ng-bg);color:var(--ng)}
+.badge-opt{background:var(--surface2);color:var(--text3)}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.fg-full{grid-column:1/-1}
+.form-group{display:flex;flex-direction:column;gap:5px}
+label{font-size:11px;color:var(--text2);font-weight:500}
+input[type=number],input[type=text],select{
+  width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;
+  transition:border-color .15s,box-shadow .15s;
+}
+input:focus,select:focus{
+  outline:none;border-color:var(--accent-mid);
+  box-shadow:0 0 0 3px rgba(58,114,192,.1);background:#fff;
+}
+.hint{font-size:10px;color:var(--text3)}
+
+.toggle-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-bottom:1px solid var(--border);
+}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{font-size:13px;color:var(--text)}
+.toggle-desc{font-size:11px;color:var(--text3);margin-top:1px}
+.toggle{position:relative;width:42px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--border2);border-radius:12px;transition:.2s;}
+.toggle-slider:before{
+  content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;
+  background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.2);
+}
+.toggle input:checked+.toggle-slider{background:var(--accent-mid)}
+.toggle input:checked+.toggle-slider:before{transform:translateX(18px)}
+
+.info-box{
+  background:var(--accent-light);border:1px solid #c0d0ea;border-radius:var(--radius-sm);
+  padding:.75rem 1rem;font-size:12px;color:var(--accent);margin-bottom:1rem;
+  display:flex;gap:8px;align-items:flex-start;
+}
+
+.btn-row{display:flex;justify-content:space-between;align-items:center;margin-top:1.5rem;gap:12px}
+.btn{
+  padding:10px 24px;font-size:13px;font-weight:500;border-radius:var(--radius-sm);cursor:pointer;
+  font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn-primary{background:var(--accent);color:#fff;border:1px solid var(--accent);}
+.btn-primary:hover{background:#163d72;border-color:#163d72}
+.btn-secondary{background:var(--surface);color:var(--text2);border:1px solid var(--border);}
+.btn-secondary:hover{background:var(--surface2)}
+.btn-run{
+  background:linear-gradient(135deg,#1e4d8c,#3a72c0);
+  color:#fff;border:none;padding:12px 32px;font-size:14px;
+  box-shadow:0 4px 16px rgba(30,77,140,.3);
+}
+.btn-run:hover{box-shadow:0 6px 20px rgba(30,77,140,.4);transform:translateY(-1px)}
+
+.verdict{
+  padding:12px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;
+  margin-bottom:1rem;display:flex;gap:10px;align-items:flex-start;border:1px solid;
+}
+.verdict-ok{background:var(--ok-bg);color:var(--ok);border-color:#9dd9b8}
+.verdict-warn{background:var(--warn-bg);color:var(--warn);border-color:#f0c96a}
+.verdict-ng{background:var(--ng-bg);color:var(--ng);border-color:#f0a0a0}
+.verdict-icon{font-size:18px;flex-shrink:0;margin-top:-1px}
+
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1rem}
+.metric{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:1rem 1.25rem;box-shadow:var(--shadow);
+}
+.metric-label{font-size:10px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.metric-value{font-size:22px;font-weight:700;color:var(--text);line-height:1.1}
+.metric-sub{font-size:10px;color:var(--text3);margin-top:4px}
+.metric-ok .metric-value{color:var(--ok)}
+.metric-warn .metric-value{color:var(--warn)}
+.metric-ng .metric-value{color:var(--ng)}
+
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1rem;box-shadow:var(--shadow)}
+.chart-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:.5rem}
+.chart-legend{display:flex;gap:16px;margin-bottom:12px;font-size:11px;color:var(--text2)}
+.legend-item{display:flex;align-items:center;gap:5px}
+.legend-dot{width:10px;height:10px;border-radius:2px}
+#chartWrap{position:relative;height:300px;width:100%}
+
+.events-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem}
+.ev-chip{
+  font-size:11px;padding:3px 10px;border-radius:999px;
+  background:var(--accent-light);color:var(--accent);border:1px solid #c0d0ea;font-weight:500;
+}
+
+.table-wrap{overflow-x:auto;max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{
+  position:sticky;top:0;background:var(--accent);color:#fff;
+  padding:8px 12px;font-weight:500;font-size:11px;text-align:right;white-space:nowrap;
+}
+thead th:first-child{text-align:left}
+tbody td{padding:6px 12px;border-bottom:1px solid var(--border);text-align:right;color:var(--text)}
+tbody td:first-child{text-align:left;color:var(--text2)}
+tbody tr:hover{background:var(--surface2)}
+tbody tr.row-event td{background:var(--accent-light);color:var(--accent);font-weight:500}
+tbody tr.row-negative td{color:var(--ng)!important;background:var(--ng-bg)}
+tbody tr.row-pension td{color:var(--warn)!important}
+tbody tr.row-event.row-negative td{color:var(--ng)!important;background:var(--ng-bg)}
+/* 画面では間引き行を非表示、印刷では全行表示 */
+tbody tr.screen-only-hide{display:none}
+@media print{tbody tr.screen-only-hide{display:table-row !important}}
+
+.assumption-bar{
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:.65rem 1rem;display:flex;flex-wrap:wrap;gap:16px;
+  font-size:11px;color:var(--text2);margin-bottom:1rem;
+}
+.assm-item{display:flex;gap:5px;align-items:center}
+.assm-key{color:var(--text3)}
+.assm-val{font-weight:700;color:var(--accent)}
+
+.sec-header{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;}
+.sec-header-num{
+  width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;
+  font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.sec-header-title{font-size:16px;font-weight:700;color:var(--text)}
+.sec-header-desc{font-size:11px;color:var(--text3)}
+.sep{border:none;border-top:1px solid var(--border);margin:1rem 0}
+
+/* ── 生活費内訳 ── */
+.mode-btn{
+  padding:6px 14px;font-size:12px;font-weight:500;
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--surface);color:var(--text2);
+  cursor:pointer;font-family:inherit;transition:all .15s;
+}
+.mode-btn-active{
+  background:var(--accent);color:#fff;border-color:var(--accent);
+}
+.expense-grid{display:flex;flex-direction:column;gap:0;margin-bottom:1rem}
+.exp-row{
+  display:flex;align-items:center;gap:10px;
+  padding:7px 0;
+  border-bottom:1px solid var(--border);
+}
+.exp-row:last-child{border-bottom:none}
+.exp-icon{font-size:15px;width:22px;text-align:center;flex-shrink:0}
+.exp-label{font-size:12px;color:var(--text2);flex:1;min-width:0}
+.exp-input-wrap{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.exp-input-wrap input{
+  width:72px;padding:5px 8px;font-size:13px;text-align:right;
+}
+.exp-unit{font-size:11px;color:var(--text3);white-space:nowrap}
+.exp-total-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--accent-light);border:1px solid #c0d0ea;
+  border-radius:var(--radius-sm);padding:.65rem 1rem;
+  margin-bottom:.75rem;
+}
+.exp-total-left{display:flex;flex-direction:column;gap:1px}
+.exp-total-label{font-size:12px;font-weight:700;color:var(--accent)}
+.exp-total-hint{font-size:10px;color:var(--text3)}
+.exp-total-right{display:flex;align-items:baseline;gap:4px}
+.exp-total-num{font-size:24px;font-weight:700;color:var(--accent)}
+.exp-total-unit{font-size:12px;color:var(--text2)}
+.exp-bar-wrap{
+  display:flex;height:10px;border-radius:5px;overflow:hidden;
+  margin-bottom:.6rem;background:var(--surface2);
+}
+.exp-bar-seg{height:100%;transition:width .3s ease;min-width:0}
+.exp-legend-row{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:10px;color:var(--text2)}
+.exp-legend-item{display:flex;align-items:center;gap:4px}
+.exp-legend-item span{display:inline-block;width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* ── 住宅ローン残高カード ── */
+.mtg-summary-row{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  margin-bottom:1rem;
+}
+.mtg-sum-item{
+  background:var(--surface2);border-radius:var(--radius-sm);
+  padding:.65rem .85rem;text-align:center;
+}
+.mtg-sum-label{font-size:10px;color:var(--text3);margin-bottom:4px}
+.mtg-sum-val{font-size:16px;font-weight:700;color:var(--text)}
+.mtg-interest{color:var(--ng) !important}
+.mtg-ok{color:var(--ok) !important}
+.mtg-progress-track{
+  height:14px;background:var(--surface2);
+  border-radius:7px;overflow:hidden;
+  border:1px solid var(--border);position:relative;
+}
+.mtg-progress-fill{
+  height:100%;background:linear-gradient(90deg,#c04a1e,#e07a50);
+  border-radius:7px;transition:width .4s ease;
+  min-width:0;position:relative;
+}
+.mtg-progress-label{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;
+}
+@media(max-width:600px){
+  .mtg-summary-row{grid-template-columns:repeat(2,1fr)}
+}
+
+@media print{
+  /* ── 基本リセット ── */
+  *{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+    box-shadow:none !important;
+  }
+  html,body{
+    background:#fff !important;
+    margin:0;padding:0;
+    font-size:11px;
+    width:100%;
+  }
+
+  /* ── 非表示にするUI要素 ── */
+  #loginOverlay,
+  .step-nav,
+  .btn-row,
+  .fp-btn,
+  .sec-header,
+  .exp-bar-wrap,
+  .exp-legend-row,
+  .ev-bar-wrap,
+  .ev-legend-row,
+  .mode-btn,
+  #expenseDetailMode,
+  #expenseTotalMode,
+  #evDetailMode,
+  #evTotalMode,
+  .header { display:none !important; }
+
+  /* ── メインアプリを表示 ── */
+  #mainApp{ display:block !important; }
+
+  /* ── 結果セクション以外を非表示 ── */
+  #sec0,#sec1,#sec2,#sec3,#sec4,#sec5{ display:none !important; }
+
+  /* ── 結果セクションを表示 ── */
+  #sec6{
+    display:block !important;
+    padding:0 !important;
+    margin:0 !important;
+    border:none !important;
+    box-shadow:none !important;
+  }
+
+  /* ── コンテナ・ページ設定 ── */
+  .container{
+    max-width:100% !important;
+    padding:0 !important;
+    margin:0 !important;
+  }
+
+  /* ── 印刷ヘッダー ── */
+  #printHeader{
+    display:flex !important;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 0 8px;
+    border-bottom:2px solid #1e4d8c;
+    margin-bottom:12px;
+  }
+  #printHeader .ph-title{
+    font-family:'DM Serif Display',serif;
+    font-size:15px;color:#1e4d8c;font-weight:700;
+  }
+  #printHeader .ph-sub{font-size:9px;color:#888;margin-top:2px}
+  #printHeader .ph-date{font-size:10px;color:#555;text-align:right}
+
+  /* ── カード・チャートカード ── */
+  .card,.chart-card{
+    border:1px solid #ddd !important;
+    border-radius:6px !important;
+    padding:10px 12px !important;
+    margin-bottom:10px !important;
+    page-break-inside:avoid;
+    break-inside:avoid;
+  }
+  .card-title{
+    font-size:11px !important;
+    padding-bottom:6px !important;
+    margin-bottom:8px !important;
+  }
+
+  /* ── 判定バー ── */
+  .verdict{
+    padding:8px 12px !important;
+    font-size:11px !important;
+    margin-bottom:8px !important;
+  }
+
+  /* ── 前提条件バー ── */
+  .assumption-bar{
+    padding:6px 10px !important;
+    font-size:9px !important;
+    margin-bottom:8px !important;
+    flex-wrap:wrap;
+    gap:8px !important;
+  }
+
+  /* ── メトリクス3列 ── */
+  .metrics{
+    display:grid !important;
+    grid-template-columns:repeat(3,1fr) !important;
+    gap:8px !important;
+    margin-bottom:10px !important;
+  }
+  .metric{
+    padding:8px 10px !important;
+    border:1px solid #ddd !important;
+  }
+  .metric-value{font-size:16px !important}
+  .metric-label{font-size:9px !important}
+  .metric-sub{font-size:9px !important}
+
+  /* ── チャートのキャンバス ── */
+  #chartWrap{
+    height:200px !important;
+    page-break-inside:avoid;
+    break-inside:avoid;
+  }
+  #mtgChartWrap{
+    height:180px !important;
+    page-break-inside:avoid;
+    break-inside:avoid;
+  }
+  .chart-title{font-size:11px !important;margin-bottom:4px !important}
+  .chart-legend{font-size:9px !important;margin-bottom:6px !important}
+  .legend-dot{width:8px !important;height:8px !important}
+
+  /* ── ローンサマリー ── */
+  .mtg-summary-row{
+    grid-template-columns:repeat(4,1fr) !important;
+    gap:6px !important;
+    margin-bottom:8px !important;
+  }
+  .mtg-sum-item{padding:6px 8px !important}
+  .mtg-sum-label{font-size:9px !important}
+  .mtg-sum-val{font-size:13px !important}
+  .mtg-progress-track{height:10px !important}
+  #mtgProgressWrap{margin:6px 0 4px !important}
+
+  /* ── イベントチップ ── */
+  .events-wrap{margin-bottom:6px !important}
+  .ev-chip{font-size:9px !important;padding:2px 7px !important}
+
+  /* ── テーブル：見切れ・スクロール解除・全行表示 ── */
+  .table-wrap{
+    overflow:visible !important;
+    max-height:none !important;
+    overflow-x:visible !important;
+    overflow-y:visible !important;
+    border:none !important;
+    border-radius:0 !important;
+  }
+  table{
+    width:100% !important;
+    font-size:9px !important;
+    border-collapse:collapse !important;
+    page-break-inside:auto;
+  }
+  thead th{
+    position:static !important;
+    background:#1e4d8c !important;
+    color:#fff !important;
+    padding:5px 6px !important;
+    font-size:9px !important;
+  }
+  tbody td{
+    padding:4px 6px !important;
+    border-bottom:0.5px solid #e0e0e0 !important;
+    font-size:9px !important;
+  }
+  tbody tr{page-break-inside:avoid;break-inside:avoid}
+
+  /* ── ページ区切り制御 ── */
+  .chart-card:nth-of-type(2){page-break-before:auto}
+  .chart-card:last-of-type{page-break-before:auto}
+
+  /* ── ローン残高行の色（印刷時は背景色なし） ── */
+  tbody tr.row-negative td{
+    color:#8a1c1c !important;
+    background:none !important;
+  }
+  tbody tr.row-event td{
+    background:#e8eef7 !important;
+    color:#1e4d8c !important;
+  }
+  tbody tr.row-pension td{color:#8a5a00 !important}
+
+  /* ── ページサイズ・余白 ── */
+  @page{
+    size:A4 portrait;
+    margin:12mm 10mm 12mm 10mm;
+  }
+}
+@media(max-width:600px){
+  .form-grid,.form-grid-3,.metrics{grid-template-columns:1fr 1fr}
+  .header-right{display:none}
+  .container{padding:1rem .75rem}
+}
+@media(max-width:400px){
+  .form-grid,.form-grid-3,.metrics{grid-template-columns:1fr}
+}
+
+/* ======== ログイン画面 ======== */
+#loginOverlay{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  padding:1.5rem;
+}
+.login-bg-deco{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 10% 20%, rgba(255,255,255,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 90% 80%, rgba(255,255,255,0.04) 0%, transparent 60%);
+  pointer-events:none;
+}
+.login-card{
+  background:#fff;
+  border-radius:16px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  padding:2.5rem 2rem 2rem;
+  width:100%;max-width:420px;
+  position:relative;
+}
+.login-logo{
+  display:flex;align-items:center;gap:14px;
+  margin-bottom:2rem;
+  padding-bottom:1.5rem;
+  border-bottom:1px solid var(--border);
+}
+.login-logo-icon{
+  width:48px;height:48px;
+  background:var(--accent);
+  border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;
+  box-shadow:0 4px 12px rgba(30,77,140,0.3);
+  flex-shrink:0;
+}
+.login-app-name{
+  font-family:'DM Serif Display',serif;
+  font-size:1.2rem;color:var(--accent);
+}
+.login-app-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.login-fields{display:flex;flex-direction:column;gap:1.1rem;margin-bottom:1.25rem}
+.login-field-group{display:flex;flex-direction:column;gap:5px}
+.login-label{font-size:11px;font-weight:700;color:var(--text2)}
+.login-input{
+  width:100%;padding:10px 13px;
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  background:var(--bg);
+  color:var(--text);font-size:14px;font-family:inherit;
+  transition:border-color .15s,box-shadow .15s;
+}
+.login-input:focus{
+  outline:none;border-color:var(--accent-mid);
+  box-shadow:0 0 0 3px rgba(58,114,192,.12);background:#fff;
+}
+.login-pw-wrap{position:relative}
+.login-pw-wrap .login-input{padding-right:42px}
+.login-eye{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;
+  color:var(--text3);padding:4px;
+  display:flex;align-items:center;
+}
+.login-eye:hover{color:var(--accent)}
+.login-hint-pw{font-size:10px;color:var(--text3)}
+.login-err{
+  background:var(--ng-bg);color:var(--ng);
+  border:1px solid #f0a0a0;border-radius:var(--radius-sm);
+  padding:8px 12px;font-size:12px;font-weight:500;
+}
+.login-btn{
+  width:100%;padding:12px;
+  background:var(--accent);color:#fff;
+  border:none;border-radius:var(--radius-sm);
+  font-size:14px;font-weight:700;font-family:inherit;
+  cursor:pointer;transition:all .15s;
+  box-shadow:0 4px 12px rgba(30,77,140,0.25);
+}
+.login-btn:hover{background:#163d72;box-shadow:0 6px 16px rgba(30,77,140,.35);transform:translateY(-1px)}
+.login-btn:active{transform:none}
+.login-manual-link{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;padding:8px;
+  background:none;border:none;
+  font-size:12px;color:var(--text3);font-family:inherit;
+  cursor:pointer;transition:color .15s;
+  text-decoration:underline;text-underline-offset:2px;
+}
+.login-manual-link:hover{color:var(--accent)}
+
+@media(max-width:480px){
+  .manual-core-list,.manual-feature-grid{grid-template-columns:1fr}
+  .login-card{padding:1.75rem 1.25rem 1.5rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ======== ログイン画面 ======== -->
+<div id="loginOverlay">
+  <div class="login-bg-deco"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">🏠</div>
+      <div class="login-logo-text">
+        <div class="login-app-name">LifePlan Simulator</div>
+        <div class="login-app-sub">NewArc LLC — 不動産営業支援ツール</div>
+      </div>
+    </div>
+
+    <div class="login-fields">
+      <div class="login-field-group">
+        <label class="login-label">ログインID</label>
+        <input type="text" id="loginId" class="login-input" placeholder="ログインIDを入力" autocomplete="username" oninput="clearLoginErr()">
+      </div>
+      <div class="login-field-group">
+        <label class="login-label">パスワード</label>
+        <div class="login-pw-wrap">
+          <input type="password" id="loginPw" class="login-input" placeholder="" autocomplete="current-password" oninput="clearLoginErr()" onkeydown="if(event.key==='Enter')doLogin()">
+          <button class="login-eye" onclick="togglePw()" id="eyeBtn" title="表示/非表示">
+            <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        </div>
+      <div id="loginErr" class="login-err" style="display:none">IDまたはパスワードが正しくありません</div>
+      <button class="login-btn" onclick="doLogin()">ログイン</button>
+    </div>
+
+    <a href="https://newarcllc.github.io/LifePlan-Simulatormanual/" target="_blank" rel="noopener noreferrer" class="login-manual-link">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      操作マニュアルを見る
+    </a>
+  </div>
+</div>
+
+<!-- ======== メインアプリ（ログイン後に表示） ======== -->
+<div id="mainApp" style="display:none">
+
+<header class="header">
+  <div class="header-icon">🏠</div>
+  <div>
+    <div class="header-title">LifePlan Simulator</div>
+    <div class="header-sub">簡易ライフプラン・キャッシュフロー試算ツール</div>
+  </div>
+  <div class="header-right">不動産営業用 / 商談サポート</div>
+  <a href="https://calendar.app.google/RKKe6Uj6B9ew7x7Q7" target="_blank" rel="noopener noreferrer" class="fp-btn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    FP相談を予約する
+  </a>
+</header>
+
+<div class="container">
+
+  <div class="step-nav" id="stepNav">
+    <button class="sn-btn active" onclick="goStep(0)"><span class="step-num">STEP 1</span>基本情報</button>
+    <button class="sn-btn" onclick="goStep(1)"><span class="step-num">STEP 2</span>収入</button>
+    <button class="sn-btn" onclick="goStep(2)"><span class="step-num">STEP 3</span>家計・貯蓄</button>
+    <button class="sn-btn" onclick="goStep(3)"><span class="step-num">STEP 4</span>住宅条件</button>
+    <button class="sn-btn" onclick="goStep(4)"><span class="step-num">STEP 5</span>教育・車</button>
+    <button class="sn-btn" onclick="goStep(5)"><span class="step-num">STEP 6</span>保険・ローン</button>
+    <button class="sn-btn" onclick="goStep(6)"><span class="step-num">RESULT</span>シミュレーション</button>
+  </div>
+
+  <!-- ======== STEP 0: 基本情報 ======== -->
+  <div class="section active" id="sec0">
+    <div class="sec-header">
+      <div class="sec-header-num">1</div>
+      <div>
+        <div class="sec-header-title">基本情報・家族構成</div>
+        <div class="sec-header-desc">世帯主・配偶者の年齢と家族構成を入力してください</div>
+      </div>
+    </div>
+    <div class="info-box">
+      <span>📋</span>
+      <span>太枠の項目が<strong>必須（コア10項目）</strong>です。余裕があれば任意項目も入力してください。</span>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        家族構成 <span class="badge badge-req">必須</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>世帯主 現在年齢（歳）</label>
+          <input type="number" id="ageMain" value="35" min="20" max="65">
+        </div>
+        <div class="form-group">
+          <label>配偶者 現在年齢（歳）</label>
+          <input type="number" id="ageSpouse" value="33" min="18" max="65">
+        </div>
+        <div class="form-group">
+          <label>現在の子どもの人数</label>
+          <select id="numChildren" onchange="updateChildFields()">
+            <option value="0">0人（子なし）</option>
+            <option value="1">1人</option>
+            <option value="2" selected>2人</option>
+            <option value="3">3人</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>今後の出産予定（人）</label>
+          <select id="futureChildren">
+            <option value="0" selected>なし</option>
+            <option value="1">1人</option>
+            <option value="2">2人</option>
+            <option value="3">3人</option>
+          </select>
+        </div>
+        <div class="form-group" id="child1group">
+          <label>第1子の現在年齢（歳）</label>
+          <input type="number" id="child1age" value="3" min="0" max="22">
+        </div>
+        <div class="form-group" id="child2group">
+          <label>第2子の現在年齢（歳）</label>
+          <input type="number" id="child2age" value="0" min="0" max="22">
+        </div>
+        <div class="form-group" id="child3group" style="display:none">
+          <label>第3子の現在年齢（歳）</label>
+          <input type="number" id="child3age" value="0" min="0" max="22">
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        働き方 <span class="badge badge-req">必須</span>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">共働き</div>
+          <div class="toggle-desc">ONの場合、世帯主＋配偶者の収入を合算</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="dualIncome" checked onchange="toggleDualFields()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div id="dualSwitch" style="margin-top:1rem">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>片働きへの切り替え（何年後）</label>
+            <select id="workSwitch">
+              <option value="0" selected>切り替えなし</option>
+              <option value="1">1年後（育児休業など）</option>
+              <option value="2">2年後</option>
+              <option value="3">3年後</option>
+              <option value="5">5年後</option>
+              <option value="7">7年後</option>
+              <option value="10">10年後</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>配偶者の復職予定（切替後 何年後）</label>
+            <select id="workReturn">
+              <option value="0" selected>復職予定なし</option>
+              <option value="3">3年後に復職</option>
+              <option value="5">5年後に復職</option>
+              <option value="7">7年後に復職</option>
+              <option value="10">10年後に復職</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        現在の居住形態 <span class="badge badge-opt">任意</span>
+      </div>
+      <div class="form-group">
+        <select id="housing">
+          <option value="rent" selected>賃貸</option>
+          <option value="company">社宅・社員寮</option>
+          <option value="own">持ち家（ローンあり）</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <div></div>
+      <button class="btn btn-primary" onclick="goStep(1)">収入を入力 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+  </div>
+
+  <!-- ======== STEP 1: 収入 ======== -->
+  <div class="section" id="sec1">
+    <div class="sec-header">
+      <div class="sec-header-num">2</div>
+      <div>
+        <div class="sec-header-title">収入・雇用情報</div>
+        <div class="sec-header-desc">手取り年収をベースに入力してください</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        現在の収入 <span class="badge badge-req">必須</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>世帯主 年収（手取り・万円）</label>
+          <input type="number" id="incMain" value="500" min="0">
+        </div>
+        <div class="form-group" id="spouseIncGroup">
+          <label>配偶者 年収（手取り・万円）</label>
+          <input type="number" id="incSpouse" value="300" min="0">
+        </div>
+        <div class="form-group">
+          <label>ボーナス 年間合計（万円）</label>
+          <input type="number" id="bonus" value="100" min="0">
+          <span class="hint">世帯合計。ない場合は0</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        老後収入（年金） <span class="badge badge-opt">任意</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>世帯主 年金見込み（月額・万円）</label>
+          <input type="number" id="pensionMain" value="15" min="0">
+          <span class="hint">65歳以降に自動切替。目安：厚生年金加入者15〜18万円</span>
+        </div>
+        <div class="form-group">
+          <label>配偶者 年金見込み（月額・万円）</label>
+          <input type="number" id="pensionSpouse" value="10" min="0">
+          <span class="hint">目安：専業主婦は約6万円</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        マクロ前提条件（変更可能）
+      </div>
+      <div class="info-box">
+        <span>ℹ️</span>
+        <span>デフォルト：物価上昇率2%・給与上昇率1%（FP標準的な想定値）</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>物価上昇率（インフレ率・%）</label>
+          <input type="number" id="inflation" value="2" min="0" max="10" step="0.5">
+          <span class="hint">生活費・教育費に毎年適用</span>
+        </div>
+        <div class="form-group">
+          <label>給与上昇率（%）</label>
+          <input type="number" id="salaryGrowth" value="1" min="0" max="10" step="0.5">
+          <span class="hint">65歳まで毎年給与に適用</span>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(0)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> 戻る</button>
+      <button class="btn btn-primary" onclick="goStep(2)">家計・貯蓄を入力 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+  </div>
+
+  <!-- ======== STEP 2: 家計・貯蓄 ======== -->
+  <div class="section" id="sec2">
+    <div class="sec-header">
+      <div class="sec-header-num">3</div>
+      <div>
+        <div class="sec-header-title">現在の家計・貯蓄状況</div>
+        <div class="sec-header-desc">毎月の支出と現在の貯蓄を確認します</div>
+      </div>
+    </div>
+
+    <!-- 住宅費（独立カード） -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        住宅費 <span class="badge badge-req">必須</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>現在の住宅費（月額・万円）</label>
+          <input type="number" id="currentHousing" value="12" min="0" step="0.1">
+          <span class="hint">家賃・管理費・駐車場など。住宅購入後は自動的に0になります</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 生活費内訳カード -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        月間生活費の内訳 <span class="badge badge-req">必須</span>
+        <span style="margin-left:auto;font-size:11px;font-weight:400;color:var(--text3)">入力すると合計が自動反映されます</span>
+      </div>
+
+      <!-- 入力モード切替 -->
+      <div style="display:flex;gap:6px;margin-bottom:1rem;">
+        <button id="modeDetailBtn" class="mode-btn mode-btn-active" onclick="setExpenseMode('detail')">内訳を入力する</button>
+        <button id="modeTotalBtn"  class="mode-btn" onclick="setExpenseMode('total')">合計だけ入力する</button>
+      </div>
+
+      <!-- 内訳モード -->
+      <div id="expenseDetailMode">
+        <div class="expense-grid">
+          <div class="exp-row">
+            <span class="exp-icon">🛒</span>
+            <span class="exp-label">食費</span>
+            <div class="exp-input-wrap"><input type="number" id="exp_food" value="6" min="0" step="0.1" oninput="calcExpTotal()"><span class="exp-unit">万円</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">💡</span>
+            <span class="exp-label">光熱費・水道</span>
+            <div class="exp-input-wrap"><input type="number" id="exp_utility" value="2" min="0" step="0.1" oninput="calcExpTotal()"><span class="exp-unit">万円</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">📱</span>
+            <span class="exp-label">通信費</span>
+            <div class="exp-input-wrap"><input type="number" id="exp_comm" value="1" min="0" step="0.1" oninput="calcExpTotal()"><span class="exp-unit">万円</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">👗</span>
+            <span class="exp-label">被服・日用品</span>
+            <div class="exp-input-wrap"><input type="number" id="exp_clothes" value="1.5" min="0" step="0.1" oninput="calcExpTotal()"><span class="exp-unit">万円</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">🎮</span>
+            <span class="exp-label">娯楽・交際費</span>
+            <div class="exp-input-wrap"><input type="number" id="exp_leisure" value="2" min="0" step="0.1" oninput="calcExpTotal()"><span class="exp-unit">万円</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">🚃</span>
+            <span class="exp-label">交通費</span>
+            <div class="exp-input-wrap"><input type="number" id="exp_transport" value="1" min="0" step="0.1" oninput="calcExpTotal()"><span class="exp-unit">万円</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">🏥</span>
+            <span class="exp-label">医療・衛生費</span>
+            <div class="exp-input-wrap"><input type="number" id="exp_medical" value="0.5" min="0" step="0.1" oninput="calcExpTotal()"><span class="exp-unit">万円</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">📚</span>
+            <span class="exp-label">習い事・自己啓発</span>
+            <div class="exp-input-wrap"><input type="number" id="exp_education" value="0.5" min="0" step="0.1" oninput="calcExpTotal()"><span class="exp-unit">万円</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">✏️</span>
+            <span class="exp-label">その他・雑費</span>
+            <div class="exp-input-wrap"><input type="number" id="exp_other" value="1.5" min="0" step="0.1" oninput="calcExpTotal()"><span class="exp-unit">万円</span></div>
+          </div>
+        </div>
+
+        <!-- 合計表示バー -->
+        <div class="exp-total-bar">
+          <div class="exp-total-left">
+            <span class="exp-total-label">月間生活費 合計</span>
+            <span class="exp-total-hint">（住宅費・保険・ローン除く）</span>
+          </div>
+          <div class="exp-total-right">
+            <span id="expTotalDisp" class="exp-total-num">16.0</span>
+            <span class="exp-total-unit">万円/月</span>
+          </div>
+        </div>
+        <div class="exp-bar-wrap">
+          <div id="expBarFood"      class="exp-bar-seg" style="background:#3a72c0" title="食費"></div>
+          <div id="expBarUtility"   class="exp-bar-seg" style="background:#0a6640" title="光熱費"></div>
+          <div id="expBarComm"      class="exp-bar-seg" style="background:#8a5a00" title="通信費"></div>
+          <div id="expBarClothes"   class="exp-bar-seg" style="background:#6b3a8c" title="被服・日用品"></div>
+          <div id="expBarLeisure"   class="exp-bar-seg" style="background:#c0522a" title="娯楽"></div>
+          <div id="expBarTransport" class="exp-bar-seg" style="background:#1a7a6e" title="交通費"></div>
+          <div id="expBarMedical"   class="exp-bar-seg" style="background:#8a1c1c" title="医療費"></div>
+          <div id="expBarEducation" class="exp-bar-seg" style="background:#4a6e1c" title="習い事"></div>
+          <div id="expBarOther"     class="exp-bar-seg" style="background:#9b9590" title="その他"></div>
+        </div>
+        <div class="exp-legend-row">
+          <span class="exp-legend-item"><span style="background:#3a72c0"></span>食費</span>
+          <span class="exp-legend-item"><span style="background:#0a6640"></span>光熱費</span>
+          <span class="exp-legend-item"><span style="background:#8a5a00"></span>通信費</span>
+          <span class="exp-legend-item"><span style="background:#6b3a8c"></span>被服・日用品</span>
+          <span class="exp-legend-item"><span style="background:#c0522a"></span>娯楽</span>
+          <span class="exp-legend-item"><span style="background:#1a7a6e"></span>交通費</span>
+          <span class="exp-legend-item"><span style="background:#8a1c1c"></span>医療費</span>
+          <span class="exp-legend-item"><span style="background:#4a6e1c"></span>習い事</span>
+          <span class="exp-legend-item"><span style="background:#9b9590"></span>その他</span>
+        </div>
+      </div>
+
+      <!-- 合計のみモード -->
+      <div id="expenseTotalMode" style="display:none">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>月間生活費 合計（万円）</label>
+            <input type="number" id="monthlyExpenseDirect" value="16" min="0" step="0.1" oninput="syncDirectTotal()">
+            <span class="hint">食費・光熱費・通信費・娯楽費など住宅費除く合計</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 隠しフィールド: シミュレーションに使う合計 -->
+      <input type="hidden" id="monthlyExpense" value="16">
+    </div>
+
+    <!-- 貯蓄 -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        現在の資産・貯蓄ペース <span class="badge badge-req">必須</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>現在の金融資産 合計（万円）</label>
+          <input type="number" id="savings" value="500" min="0">
+          <span class="hint">預金・定期・投資信託・株など合計</span>
+        </div>
+        <div class="form-group">
+          <label>月間平均貯蓄額（万円）</label>
+          <input type="number" id="monthlySavings" value="5" min="0">
+          <span class="hint">毎月の積立額。65歳（収入ゼロ）で自動停止します</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> 戻る</button>
+      <button class="btn btn-primary" onclick="goStep(3)">住宅条件を入力 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+  </div>
+
+  <!-- ======== STEP 3: 住宅条件 ======== -->
+  <div class="section" id="sec3">
+    <div class="sec-header">
+      <div class="sec-header-num">4</div>
+      <div>
+        <div class="sec-header-title">住宅購入条件</div>
+        <div class="sec-header-desc">希望物件と資金計画を入力してください</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        物件・資金計画 <span class="badge badge-req">必須</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>希望物件価格 総額（万円）</label>
+          <input type="number" id="propertyPrice" value="4500" min="0">
+        </div>
+        <div class="form-group">
+          <label>頭金として出せる自己資金（万円）</label>
+          <input type="number" id="downPayment" value="500" min="0">
+        </div>
+        <div class="form-group">
+          <label>親・祖父母からの援助見込み（万円）</label>
+          <input type="number" id="parentGift" value="0" min="0">
+          <span class="hint">住宅取得資金の贈与</span>
+        </div>
+        <div class="form-group">
+          <label>購入予定時期（何年後）</label>
+          <select id="purchaseYear">
+            <option value="0">今すぐ（今年中）</option>
+            <option value="1">1年後</option>
+            <option value="2" selected>2年後</option>
+            <option value="3">3年後</option>
+            <option value="5">5年後</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        ローン条件 <span class="badge badge-req">必須</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <!-- ★ 15〜50年・5年刻み -->
+          <label>ローン借入期間（年）</label>
+          <select id="loanTerm">
+            <option value="15">15年</option>
+            <option value="20">20年</option>
+            <option value="25">25年</option>
+            <option value="30" selected>30年</option>
+            <option value="35">35年</option>
+            <option value="40">40年</option>
+            <option value="45">45年</option>
+            <option value="50">50年</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>適用金利（年利・%）</label>
+          <input type="number" id="interestRate" value="0.7" min="0" max="15" step="0.05">
+          <span class="hint">変動の場合は現行金利を入力。固定の場合は適用金利を</span>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> 戻る</button>
+      <button class="btn btn-primary" onclick="goStep(4)">教育・車を入力 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+  </div>
+
+  <!-- ======== STEP 4: 教育・車 ======== -->
+  <div class="section" id="sec4">
+    <div class="sec-header">
+      <div class="sec-header-num">5</div>
+      <div>
+        <div class="sec-header-title">教育・車などのライフイベント</div>
+        <div class="sec-header-desc">将来の大きな支出を設定します</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        教育方針 <span class="badge badge-req">必須</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group fg-full">
+          <label>子どもの教育方針（小中高）</label>
+          <select id="educationPolicy">
+            <option value="public">公立中心（大学のみ私立も可）</option>
+            <option value="mixed">中学・高校は一部私立も検討</option>
+            <option value="private">私立中心（中高一貫など）</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>大学進学を想定するか</label>
+          <select id="university">
+            <option value="yes" selected>進学を想定する（22歳で独立）</option>
+            <option value="no">進学しない（18歳で独立）</option>
+          </select>
+        </div>
+      </div>
+      <hr class="sep">
+      <div style="font-size:11px;color:var(--text3);margin-top:.5rem;line-height:1.9">
+        ▸ 公立中心：小学校15万/中学18万/高校20万/大学150万（年）&nbsp;&nbsp;▸ 私立中心：小80万/中120万/高130万/大150万（年）<br>
+        ▸ <strong style="color:var(--accent)">子ども独立時</strong>に月間生活費を<strong style="color:var(--accent)">1人あたり8%自動削減</strong>（大学進学なら22歳、しない場合は18歳）
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        車の買い替え <span class="badge badge-opt">任意</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>次回の車買い替え（何年後）</label>
+          <select id="carReplace">
+            <option value="0">今年</option>
+            <option value="3" selected>3年後</option>
+            <option value="5">5年後</option>
+            <option value="7">7年後</option>
+            <option value="10">10年後</option>
+            <option value="999">買い替え予定なし</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>買い替え予算（万円）</label>
+          <input type="number" id="carBudget" value="250" min="0">
+        </div>
+        <div class="form-group">
+          <label>以降の買い替えサイクル（年）</label>
+          <select id="carCycle">
+            <option value="5">5年ごと</option>
+            <option value="7" selected>7年ごと</option>
+            <option value="10">10年ごと</option>
+            <option value="999">1回のみ（以降なし）</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(3)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> 戻る</button>
+      <button class="btn btn-primary" onclick="goStep(5)">保険・ローンを入力 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+  </div>
+
+  <!-- ======== STEP 5: 保険・ローン・年間費用 ======== -->
+  <div class="section" id="sec5">
+    <div class="sec-header">
+      <div class="sec-header-num">6</div>
+      <div>
+        <div class="sec-header-title">保険・ローン・年間特別費用</div>
+        <div class="sec-header-desc">固定的な支出と年間イベント費用を確認します</div>
+      </div>
+    </div>
+
+    <!-- 保険・ローンカード（既存） -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        保険・ローン <span class="badge badge-req">必須</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>保険料 年間合計（万円）</label>
+          <input type="number" id="insurance" value="30" min="0">
+          <span class="hint">生命・医療・学資・損害保険など全て合計</span>
+        </div>
+        <div class="form-group">
+          <label>その他ローン 月返済合計（万円）</label>
+          <input type="number" id="otherLoan" value="2" min="0">
+          <span class="hint">自動車・教育・カードローンなど</span>
+        </div>
+        <div class="form-group fg-full">
+          <label>その他ローンの返済終了時期</label>
+          <select id="otherLoanEndYear">
+            <option value="999">終了なし（ずっと継続）</option>
+            <option value="1">1年後に完済</option>
+            <option value="2">2年後に完済</option>
+            <option value="3">3年後に完済</option>
+            <option value="4">4年後に完済</option>
+            <option value="5">5年後に完済</option>
+            <option value="6">6年後に完済</option>
+            <option value="7">7年後に完済</option>
+            <option value="8">8年後に完済</option>
+            <option value="9">9年後に完済</option>
+            <option value="10">10年後に完済</option>
+            <option value="12">12年後に完済</option>
+            <option value="15">15年後に完済</option>
+            <option value="20">20年後に完済</option>
+            <option value="25">25年後に完済</option>
+            <option value="30">30年後に完済</option>
+          </select>
+          <span class="hint">完済後はその他ローン返済額が0円になります</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 年間特別費用カード（新規） -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        年間イベント・特別費用 <span class="badge badge-opt">任意</span>
+        <span style="margin-left:auto;font-size:11px;font-weight:400;color:var(--text3)">物価上昇率が毎年適用されます</span>
+      </div>
+
+      <!-- 入力モード切替 -->
+      <div style="display:flex;gap:6px;margin-bottom:1rem;">
+        <button id="evModeDetailBtn" class="mode-btn mode-btn-active" onclick="setEvMode('detail')">内訳を入力する</button>
+        <button id="evModeTotalBtn"  class="mode-btn" onclick="setEvMode('total')">合計だけ入力する</button>
+      </div>
+
+      <!-- 内訳モード -->
+      <div id="evDetailMode">
+        <div class="expense-grid">
+          <div class="exp-row">
+            <span class="exp-icon">✈️</span>
+            <span class="exp-label">旅行・レジャー</span>
+            <div class="exp-input-wrap"><input type="number" id="ev_travel" value="20" min="0" step="0.5" oninput="calcEvTotal()"><span class="exp-unit">万円/年</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">💒</span>
+            <span class="exp-label">冠婚葬祭・ご祝儀</span>
+            <div class="exp-input-wrap"><input type="number" id="ev_ceremony" value="10" min="0" step="0.5" oninput="calcEvTotal()"><span class="exp-unit">万円/年</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">🏠</span>
+            <span class="exp-label">帰省・交通費（年間）</span>
+            <div class="exp-input-wrap"><input type="number" id="ev_homecoming" value="5" min="0" step="0.5" oninput="calcEvTotal()"><span class="exp-unit">万円/年</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">🎂</span>
+            <span class="exp-label">誕生日・記念日・プレゼント</span>
+            <div class="exp-input-wrap"><input type="number" id="ev_anniversary" value="5" min="0" step="0.5" oninput="calcEvTotal()"><span class="exp-unit">万円/年</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">🎄</span>
+            <span class="exp-label">年末年始・季節イベント</span>
+            <div class="exp-input-wrap"><input type="number" id="ev_seasonal" value="5" min="0" step="0.5" oninput="calcEvTotal()"><span class="exp-unit">万円/年</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">🎾</span>
+            <span class="exp-label">趣味・スポーツ用品</span>
+            <div class="exp-input-wrap"><input type="number" id="ev_hobby" value="3" min="0" step="0.5" oninput="calcEvTotal()"><span class="exp-unit">万円/年</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">🏥</span>
+            <span class="exp-label">健康診断・人間ドック</span>
+            <div class="exp-input-wrap"><input type="number" id="ev_health" value="2" min="0" step="0.5" oninput="calcEvTotal()"><span class="exp-unit">万円/年</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">🛋️</span>
+            <span class="exp-label">家具・家電の買い替え</span>
+            <div class="exp-input-wrap"><input type="number" id="ev_furniture" value="3" min="0" step="0.5" oninput="calcEvTotal()"><span class="exp-unit">万円/年</span></div>
+          </div>
+          <div class="exp-row">
+            <span class="exp-icon">📝</span>
+            <span class="exp-label">その他イベント・雑費</span>
+            <div class="exp-input-wrap"><input type="number" id="ev_misc" value="2" min="0" step="0.5" oninput="calcEvTotal()"><span class="exp-unit">万円/年</span></div>
+          </div>
+        </div>
+
+        <!-- 合計バー -->
+        <div class="exp-total-bar">
+          <div class="exp-total-left">
+            <span class="exp-total-label">年間イベント費 合計</span>
+            <span class="exp-total-hint">（物価上昇率が毎年適用されます）</span>
+          </div>
+          <div class="exp-total-right">
+            <span id="evTotalDisp" class="exp-total-num">55.0</span>
+            <span class="exp-total-unit">万円/年</span>
+          </div>
+        </div>
+        <div class="exp-bar-wrap">
+          <div id="evBarTravel"      class="exp-bar-seg" style="background:#185FA5" title="旅行"></div>
+          <div id="evBarCeremony"    class="exp-bar-seg" style="background:#6b3a8c" title="冠婚葬祭"></div>
+          <div id="evBarHomecoming"  class="exp-bar-seg" style="background:#0F6E56" title="帰省"></div>
+          <div id="evBarAnniversary" class="exp-bar-seg" style="background:#c04a1e" title="記念日"></div>
+          <div id="evBarSeasonal"    class="exp-bar-seg" style="background:#8a5a00" title="季節イベント"></div>
+          <div id="evBarHobby"       class="exp-bar-seg" style="background:#3a72c0" title="趣味"></div>
+          <div id="evBarHealth"      class="exp-bar-seg" style="background:#8a1c1c" title="健康診断"></div>
+          <div id="evBarFurniture"   class="exp-bar-seg" style="background:#4a6e1c" title="家具家電"></div>
+          <div id="evBarMisc"        class="exp-bar-seg" style="background:#9b9590" title="その他"></div>
+        </div>
+        <div class="exp-legend-row">
+          <span class="exp-legend-item"><span style="background:#185FA5"></span>旅行</span>
+          <span class="exp-legend-item"><span style="background:#6b3a8c"></span>冠婚葬祭</span>
+          <span class="exp-legend-item"><span style="background:#0F6E56"></span>帰省</span>
+          <span class="exp-legend-item"><span style="background:#c04a1e"></span>記念日</span>
+          <span class="exp-legend-item"><span style="background:#8a5a00"></span>季節行事</span>
+          <span class="exp-legend-item"><span style="background:#3a72c0"></span>趣味</span>
+          <span class="exp-legend-item"><span style="background:#8a1c1c"></span>健康診断</span>
+          <span class="exp-legend-item"><span style="background:#4a6e1c"></span>家具家電</span>
+          <span class="exp-legend-item"><span style="background:#9b9590"></span>その他</span>
+        </div>
+      </div>
+
+      <!-- 合計のみモード -->
+      <div id="evTotalMode" style="display:none">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>年間イベント費 合計（万円）</label>
+            <input type="number" id="annualEventsDirect" value="55" min="0" step="1" oninput="syncEvDirect()">
+            <span class="hint">旅行・冠婚葬祭・帰省・趣味など年間でかかる費用の合計</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 隠しフィールド -->
+      <input type="hidden" id="annualEvents" value="55">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(4)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> 戻る</button>
+      <button class="btn btn-run" onclick="goStep(6)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        シミュレーション実行
+      </button>
+    </div>
+  </div>
+
+  <!-- ======== STEP 6: 結果 ======== -->
+  <div class="section" id="sec6">
+    <div class="sec-header">
+      <div class="sec-header-num">✓</div>
+      <div>
+        <div class="sec-header-title">シミュレーション結果</div>
+        <div class="sec-header-desc">世帯主90歳までのキャッシュフロー試算</div>
+      </div>
+    </div>
+    <div id="resultArea">
+      <div style="text-align:center;padding:3rem;color:var(--text3)">計算中...</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="goStep(5)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> 条件を修正</button>
+      <button class="btn btn-primary" onclick="window.print()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        印刷・PDF保存
+      </button>
+    </div>
+  </div>
+
+</div><!-- end .container -->
+</div><!-- end #mainApp -->
+
+<script>
+let currentStep = 0;
+let cfChart = null;
+
+function goStep(n) {
+  document.querySelectorAll('.section').forEach((s, i) => s.classList.toggle('active', i === n));
+  document.querySelectorAll('.sn-btn').forEach((b, i) => b.classList.toggle('active', i === n));
+  currentStep = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (n === 6) runSimulation();
+}
+
+function toggleDualFields() {
+  const on = document.getElementById('dualIncome').checked;
+  document.getElementById('dualSwitch').style.display = on ? 'block' : 'none';
+  const sg = document.getElementById('spouseIncGroup');
+  sg.style.opacity = on ? '1' : '0.4';
+  sg.querySelector('input').disabled = !on;
+}
+
+// ★ 子どもの人数に応じてフィールド表示切替
+function updateChildFields() {
+  const n = parseInt(document.getElementById('numChildren').value) || 0;
+  document.getElementById('child1group').style.display = n >= 1 ? '' : 'none';
+  document.getElementById('child2group').style.display = n >= 2 ? '' : 'none';
+  document.getElementById('child3group').style.display = n >= 3 ? '' : 'none';
+}
+
+// ── 生活費内訳モード切替 ──────────────────────────
+let expenseMode = 'detail';
+
+function setExpenseMode(mode) {
+  expenseMode = mode;
+  document.getElementById('expenseDetailMode').style.display = mode === 'detail' ? '' : 'none';
+  document.getElementById('expenseTotalMode').style.display  = mode === 'total'  ? '' : 'none';
+  document.getElementById('modeDetailBtn').className = 'mode-btn' + (mode === 'detail' ? ' mode-btn-active' : '');
+  document.getElementById('modeTotalBtn').className  = 'mode-btn' + (mode === 'total'  ? ' mode-btn-active' : '');
+  if (mode === 'detail') calcExpTotal();
+}
+
+function calcExpTotal() {
+  const ids = ['exp_food','exp_utility','exp_comm','exp_clothes','exp_leisure','exp_transport','exp_medical','exp_education','exp_other'];
+  const vals = ids.map(id => parseFloat(document.getElementById(id).value) || 0);
+  const total = vals.reduce((a, b) => a + b, 0);
+  const t = Math.round(total * 10) / 10;
+  document.getElementById('expTotalDisp').textContent = t.toFixed(1);
+  document.getElementById('monthlyExpense').value = t;
+  document.getElementById('monthlyExpenseDirect').value = t;
+
+  // プログレスバー更新
+  const barIds = ['expBarFood','expBarUtility','expBarComm','expBarClothes','expBarLeisure','expBarTransport','expBarMedical','expBarEducation','expBarOther'];
+  barIds.forEach((bid, i) => {
+    const pct = total > 0 ? (vals[i] / total * 100).toFixed(1) : 0;
+    document.getElementById(bid).style.width = pct + '%';
+    document.getElementById(bid).title = ids[i].replace('exp_','') + ': ' + vals[i].toFixed(1) + '万円 (' + pct + '%)';
+  });
+}
+
+function syncDirectTotal() {
+  const v = parseFloat(document.getElementById('monthlyExpenseDirect').value) || 0;
+  document.getElementById('monthlyExpense').value = v;
+}
+
+// ── 年間イベント費内訳 ─────────────────────────────
+function setEvMode(mode) {
+  document.getElementById('evDetailMode').style.display = mode === 'detail' ? '' : 'none';
+  document.getElementById('evTotalMode').style.display  = mode === 'total'  ? '' : 'none';
+  document.getElementById('evModeDetailBtn').className = 'mode-btn' + (mode === 'detail' ? ' mode-btn-active' : '');
+  document.getElementById('evModeTotalBtn').className  = 'mode-btn' + (mode === 'total'  ? ' mode-btn-active' : '');
+  if (mode === 'detail') calcEvTotal();
+}
+
+function calcEvTotal() {
+  const ids = ['ev_travel','ev_ceremony','ev_homecoming','ev_anniversary','ev_seasonal','ev_hobby','ev_health','ev_furniture','ev_misc'];
+  const barIds = ['evBarTravel','evBarCeremony','evBarHomecoming','evBarAnniversary','evBarSeasonal','evBarHobby','evBarHealth','evBarFurniture','evBarMisc'];
+  const vals = ids.map(id => parseFloat(document.getElementById(id).value) || 0);
+  const total = vals.reduce((a, b) => a + b, 0);
+  const t = Math.round(total * 10) / 10;
+  document.getElementById('evTotalDisp').textContent = t.toFixed(1);
+  document.getElementById('annualEvents').value = t;
+  document.getElementById('annualEventsDirect').value = t;
+  barIds.forEach((bid, i) => {
+    const pct = total > 0 ? (vals[i] / total * 100).toFixed(1) : 0;
+    document.getElementById(bid).style.width = pct + '%';
+  });
+}
+
+function syncEvDirect() {
+  const v = parseFloat(document.getElementById('annualEventsDirect').value) || 0;
+  document.getElementById('annualEvents').value = v;
+}
+
+function calcMortgage(principal, annualRate, years) {
+  if (principal <= 0) return 0;
+  if (annualRate === 0) return principal / (years * 12);
+  const r = annualRate / 100 / 12;
+  const n = years * 12;
+  return principal * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+}
+
+function eduCostForChild(policy, uni, childAgeNow, y) {
+  const age = childAgeNow + y;
+  let cost = 0;
+  if (policy === 'public') {
+    if (age >= 6 && age < 12) cost += 15;
+    else if (age >= 12 && age < 15) cost += 18;
+    else if (age >= 15 && age < 18) cost += 20;
+  } else if (policy === 'mixed') {
+    if (age >= 6 && age < 12) cost += 15;
+    else if (age >= 12 && age < 15) cost += 55;
+    else if (age >= 15 && age < 18) cost += 55;
+  } else {
+    if (age >= 6 && age < 12) cost += 80;
+    else if (age >= 12 && age < 15) cost += 120;
+    else if (age >= 15 && age < 18) cost += 130;
+  }
+  if (uni === 'yes' && age >= 18 && age < 22) cost += 150;
+  return cost;
+}
+
+function fmt(n)    { return Math.round(n).toLocaleString('ja-JP'); }
+function fmtSign(n){ const r = Math.round(n); return (r >= 0 ? '+' : '') + r.toLocaleString('ja-JP'); }
+
+function runSimulation() {
+  const v  = id => document.getElementById(id);
+  const nv = id => parseFloat(v(id).value) || 0;
+  const iv = id => parseInt(v(id).value)   || 0;
+
+  const ageMain        = iv('ageMain') || 35;
+  const numChildren    = iv('numChildren');
+  const child1         = iv('child1age');
+  const child2         = iv('child2age');
+  const child3         = iv('child3age');          // ★ 第3子
+  const futureKids     = iv('futureChildren');
+  const dualIncome     = v('dualIncome').checked;
+  const workSwitch     = iv('workSwitch');
+  const workReturn     = iv('workReturn');
+  const incMain        = nv('incMain');
+  const incSpouse      = nv('incSpouse');
+  const bonus          = nv('bonus');
+  const pensionMain    = nv('pensionMain') * 12;
+  const pensionSpouse  = nv('pensionSpouse') * 12;
+  const inflation      = nv('inflation') / 100 || 0.02;
+  const salaryGrowth   = nv('salaryGrowth') / 100 || 0.01;
+  const monthlyExpBase = nv('monthlyExpense');
+  const currentHousing = nv('currentHousing');
+  let   assets         = nv('savings');
+  const monthlySavings = nv('monthlySavings');
+  const propPrice      = nv('propertyPrice');
+  const downPayment    = nv('downPayment');
+  const parentGift     = nv('parentGift');
+  const purchaseYear   = iv('purchaseYear');
+  const loanTerm       = iv('loanTerm') || 30;
+  const rate           = nv('interestRate');
+  const eduPolicy      = v('educationPolicy').value;
+  const uni            = v('university').value;
+  const carReplace     = iv('carReplace');
+  const carBudget      = nv('carBudget');
+  const carCycle       = parseInt(v('carCycle').value) || 7;
+  const insurance      = nv('insurance');
+  const otherLoan      = nv('otherLoan');
+  const otherLoanEndY  = parseInt(v('otherLoanEndYear').value) || 999;
+  const annualEvents   = nv('annualEvents'); // ★ 年間イベント費
+
+  // ★ 子ども独立年齢
+  const independAge = uni === 'yes' ? 22 : 18;
+
+  // 全子どものリスト（現在年齢ベース）、最大3人
+  const allChildAges = [];
+  if (numChildren >= 1) allChildAges.push(child1);
+  if (numChildren >= 2) allChildAges.push(child2);
+  if (numChildren >= 3) allChildAges.push(child3);
+  // 未来の子：出産を現在から −5, −8, −11年前生まれ相当で推定
+  const futureOffsets = [-5, -8, -11];
+  for (let fi = 0; fi < Math.min(futureKids, 3); fi++) {
+    if (allChildAges.length < 3) allChildAges.push(futureOffsets[fi]);
+  }
+  const childList = allChildAges.slice(0, 3);
+
+  // 各子の独立年度インデックス
+  const childIndependY = childList.map(ca => Math.max(0, independAge - ca));
+
+  const totalSelf     = downPayment + parentGift;
+  const loanAmount    = Math.max(0, propPrice - totalSelf);
+  const monthlyMtg    = calcMortgage(loanAmount, rate, loanTerm);
+  const annualMtg     = monthlyMtg * 12;
+  const simYears      = 90 - ageMain;
+
+  const rows   = [];
+  const events = {};
+  let firstNegYear = null;
+  let minBalance   = Infinity;
+
+  const addEvent = (y, label) => {
+    if (!events[y]) events[y] = [];
+    if (!events[y].includes(label)) events[y].push(label);
+  };
+
+  for (let y = 0; y <= simYears; y++) {
+    const age = ageMain + y;
+    const inf = Math.pow(1 + inflation,   y);
+    const sg  = Math.pow(1 + salaryGrowth, Math.min(y, 65 - ageMain));
+
+    // ─── 収入 ────────────────────────────────────────
+    let income = 0;
+    if (age < 65) {
+      const switched     = workSwitch > 0 && y >= workSwitch;
+      const returned     = switched && workReturn > 0 && y >= (workSwitch + workReturn);
+      const spouseWorks  = !switched || returned;
+      const sp           = (dualIncome && spouseWorks) ? incSpouse * sg : 0;
+      income             = incMain * sg + sp + bonus;
+    } else {
+      income = pensionMain + pensionSpouse;
+      if (y === 65 - ageMain) addEvent(y, '🔶 年金収入へ切替');
+    }
+
+    // ★ 月間貯蓄上乗せ: 65歳以降は停止
+    const extraSavings = age < 65 ? monthlySavings * 12 : 0;
+
+    // ─── 住宅費 ──────────────────────────────────────
+    let housingCost = 0;
+    if (y < purchaseYear) {
+      housingCost = currentHousing * 12 * inf;
+    } else if (y === purchaseYear) {
+      housingCost = annualMtg;
+      assets -= totalSelf;
+      addEvent(y, '🏠 住宅購入');
+    } else if (y > purchaseYear && y < purchaseYear + loanTerm) {
+      housingCost = annualMtg;
+    }
+
+    // ─── 教育費 ──────────────────────────────────────
+    let edu = 0;
+    childList.forEach((ca, idx) => {
+      edu += eduCostForChild(eduPolicy, uni, ca, y) * inf;
+      const cAge = ca + y;
+      if (cAge === 6)  addEvent(y, `🎒 子${idx+1} 小学入学`);
+      if (cAge === 12) addEvent(y, `📚 子${idx+1} 中学入学`);
+      if (cAge === 15) addEvent(y, `🏫 子${idx+1} 高校入学`);
+      if (cAge === 18 && uni === 'yes') addEvent(y, `🎓 子${idx+1} 大学入学`);
+      if (cAge === independAge) addEvent(y, `🕊 子${idx+1} 独立（${independAge}歳）`);
+    });
+
+    // ★ 生活費: 子ども独立ごとに8%削減
+    const independCount     = childList.filter((_, idx) => y >= childIndependY[idx]).length;
+    const expReduceFactor   = Math.max(0, 1 - independCount * 0.08);
+    const livingExpense     = monthlyExpBase * 12 * inf * expReduceFactor;
+
+    // ─── 車費 ────────────────────────────────────────
+    let carCost = 0;
+    if (carReplace < 999) {
+      let nextCar = carReplace;
+      while (nextCar <= simYears) {
+        if (y === nextCar) { carCost = carBudget; addEvent(y, '🚗 車買替'); break; }
+        if (carCycle >= 999) break;
+        nextCar += carCycle;
+      }
+    }
+
+    const ins  = insurance * inf;
+
+    // ★ その他ローン: 指定年度以降は0
+    const loan = y < otherLoanEndY ? otherLoan * 12 : 0;
+    if (y === otherLoanEndY) addEvent(y, '💳 その他ローン完済');
+
+    // ★ 年間イベント費（物価上昇率適用）
+    const evCost = annualEvents * inf;
+
+    const totalExpense = livingExpense + housingCost + edu + ins + loan + carCost + evCost;
+
+    // CF = 給与収入 + 月次積立上乗せ - 総支出
+    const cf = income + extraSavings - totalExpense;
+    assets += cf;
+
+    if (assets < minBalance) minBalance = assets;
+    if (assets < 0 && !firstNegYear) firstNegYear = age;
+
+    // ─── 住宅ローン残高計算 ──────────────────────────
+    // 購入前・完済後は0。購入年〜完済年は元利均等の残高計算
+    let mortgageBalance = 0;
+    if (loanAmount > 0 && y >= purchaseYear && y < purchaseYear + loanTerm) {
+      const monthsPaid = (y - purchaseYear) * 12;
+      const totalMonths = loanTerm * 12;
+      if (rate === 0) {
+        mortgageBalance = loanAmount * (1 - monthsPaid / totalMonths);
+      } else {
+        const r = rate / 100 / 12;
+        // 残高 = 元本 × (1+r)^n - 月返済額 × ((1+r)^n - 1)/r
+        const pow = Math.pow(1 + r, monthsPaid);
+        mortgageBalance = loanAmount * pow - monthlyMtg * (pow - 1) / r;
+      }
+      mortgageBalance = Math.max(0, mortgageBalance);
+    }
+    if (y === purchaseYear + loanTerm - 1) addEvent(y, '🏦 住宅ローン完済');
+
+    rows.push({
+      y, age,
+      income:  Math.round(income + extraSavings),
+      expense: Math.round(totalExpense),
+      cf:      Math.round(cf),
+      assets:  Math.round(assets),
+      mortgageBalance: Math.round(mortgageBalance),
+      isEvent: !!(events[y] && events[y].length),
+      isPension: age >= 65
+    });
+  }
+
+  // ─── 判定 ─────────────────────────────────────────
+  let verdictClass, verdictIcon, verdictMsg;
+  if (firstNegYear) {
+    verdictClass = 'verdict-ng'; verdictIcon = '⚠️';
+    verdictMsg = `<strong>${firstNegYear}歳頃</strong>に貯蓄残高がマイナスになる見込みです。月々の返済額・頭金の増額・収入アップなどの対策をご検討ください。`;
+  } else if (minBalance < 300) {
+    verdictClass = 'verdict-warn'; verdictIcon = '⚡';
+    verdictMsg = `90歳まで残高はプラスを維持しますが、最低残高 <strong>${fmt(minBalance)}万円</strong> と余裕が少ない状況です。急な出費に備えた見直しをご検討ください。`;
+  } else {
+    verdictClass = 'verdict-ok'; verdictIcon = '✅';
+    verdictMsg = `90歳まで安定してキャッシュフローを維持できる見込みです（最低残高 <strong>${fmt(minBalance)}万円</strong>）。`;
+  }
+
+  const finalAssets = rows[rows.length - 1].assets;
+  const statusClass = firstNegYear ? 'metric-ng' : minBalance < 300 ? 'metric-warn' : 'metric-ok';
+  const allEvents   = Object.values(events).flat();
+  const evChips     = allEvents.slice(0, 12).map(l => `<div class="ev-chip">${l}</div>`).join('');
+
+  const loanEndLabel = otherLoanEndY < 999 ? `${otherLoanEndY}年後に完済` : '継続';
+  const assumpBar = `
+    <div class="assumption-bar">
+      <div class="assm-item"><span class="assm-key">物価上昇率</span><span class="assm-val">${nv('inflation')}%/年</span></div>
+      <div class="assm-item"><span class="assm-key">給与上昇率</span><span class="assm-val">${nv('salaryGrowth')}%/年</span></div>
+      <div class="assm-item"><span class="assm-key">借入額</span><span class="assm-val">${fmt(loanAmount)}万円</span></div>
+      <div class="assm-item"><span class="assm-key">金利/期間</span><span class="assm-val">${rate}% / ${loanTerm}年</span></div>
+      <div class="assm-item"><span class="assm-key">子独立後生活費</span><span class="assm-val">1人▲8%</span></div>
+      <div class="assm-item"><span class="assm-key">貯蓄上乗せ</span><span class="assm-val">65歳で停止</span></div>
+      <div class="assm-item"><span class="assm-key">その他ローン</span><span class="assm-val">${loanEndLabel}</span></div>
+      <div class="assm-item"><span class="assm-key">年間イベント費</span><span class="assm-val">${fmt(annualEvents)}万円/年</span></div>
+    </div>`;
+
+  let tableHTML = '';
+  rows.forEach((r, idx) => {
+    const evLabel = events[r.y] ? ` ${events[r.y].join(' ')}` : '';
+    let cls = r.assets < 0 ? 'row-negative' : (r.isPension && r.age === 65) ? 'row-pension' : r.isEvent ? 'row-event' : '';
+    // 画面表示は間引き（5年おき＋イベント年）、印刷では全行表示のためdata属性で制御
+    const hide = !(idx === 0 || idx === rows.length - 1 || r.isEvent || (r.isPension && r.age === 65) || idx % 5 === 0);
+    tableHTML += `<tr class="${cls}${hide ? ' screen-only-hide' : ''}">
+      <td>${r.age}歳${evLabel}</td>
+      <td>${fmt(r.income)}</td>
+      <td>${fmt(r.expense)}</td>
+      <td>${fmtSign(r.cf)}</td>
+      <td>${fmt(r.assets)}</td>
+      ${loanAmount > 0 ? `<td style="color:${r.mortgageBalance > 0 ? 'var(--ng)' : 'var(--ok)'}">${r.mortgageBalance > 0 ? fmt(r.mortgageBalance) : '完済'}</td>` : ''}
+    </tr>`;
+  });
+
+  document.getElementById('resultArea').innerHTML = `
+    <div id="printHeader" style="display:none">
+      <div>
+        <div class="ph-title">簡易ライフプランシミュレーター</div>
+        <div class="ph-sub">NewArc LLC — 不動産営業支援ツール</div>
+      </div>
+      <div class="ph-date">
+        ${new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'})} ${new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}<br>
+        借入${fmt(loanAmount)}万円・${rate}% / ${loanTerm}年<br>
+        現在 ${fmt(nv('savings'))}万円 → 90歳時点 ${fmt(finalAssets)}万円
+      </div>
+    </div>
+    <div class="verdict ${verdictClass}"><span class="verdict-icon">${verdictIcon}</span><div>${verdictMsg}</div></div>
+    ${assumpBar}
+    <div class="metrics">
+      <div class="metric ${statusClass}">
+        <div class="metric-label">月返済額（試算）</div>
+        <div class="metric-value">${fmt(Math.round(monthlyMtg))}万円</div>
+        <div class="metric-sub">借入${fmt(loanAmount)}万円・${rate}%・${loanTerm}年</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">90歳時点の貯蓄残高</div>
+        <div class="metric-value">${fmt(finalAssets)}万円</div>
+        <div class="metric-sub">現在 ${fmt(nv('savings'))}万円 → 90歳時点</div>
+      </div>
+      <div class="metric ${statusClass}">
+        <div class="metric-label">試算期間中の最低残高</div>
+        <div class="metric-value">${fmt(minBalance)}万円</div>
+        <div class="metric-sub">${firstNegYear ? firstNegYear + '歳頃にマイナス転落' : '全期間プラスを維持'}</div>
+      </div>
+    </div>
+    ${loanAmount > 0 ? `
+    <div class="chart-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:.75rem">
+        <div>
+          <div class="chart-title">住宅ローン残高の推移</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">購入${ageMain + purchaseYear}歳 〜 完済${ageMain + purchaseYear + loanTerm - 1}歳（${loanTerm}年ローン）</div>
+        </div>
+        <div style="display:flex;gap:16px;font-size:11px;color:var(--text2);flex-wrap:wrap">
+          <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#c04a1e"></span>ローン残高</span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#1e4d8c"></span>金融資産残高</span>
+        </div>
+      </div>
+      <div class="mtg-summary-row">
+        <div class="mtg-sum-item">
+          <div class="mtg-sum-label">借入総額</div>
+          <div class="mtg-sum-val">${fmt(loanAmount)}万円</div>
+        </div>
+        <div class="mtg-sum-item">
+          <div class="mtg-sum-label">総返済額（試算）</div>
+          <div class="mtg-sum-val">${fmt(Math.round(monthlyMtg * loanTerm * 12))}万円</div>
+        </div>
+        <div class="mtg-sum-item">
+          <div class="mtg-sum-label">利息総額（試算）</div>
+          <div class="mtg-sum-val mtg-interest">${fmt(Math.round(monthlyMtg * loanTerm * 12 - loanAmount))}万円</div>
+        </div>
+        <div class="mtg-sum-item">
+          <div class="mtg-sum-label">完済予定年齢</div>
+          <div class="mtg-sum-val mtg-ok">${ageMain + purchaseYear + loanTerm}歳</div>
+        </div>
+      </div>
+      <div id="mtgProgressWrap" style="margin:1rem 0 .5rem">
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px">
+          <span>借入時 ${ageMain + purchaseYear}歳</span>
+          <span>完済 ${ageMain + purchaseYear + loanTerm}歳</span>
+        </div>
+        <div class="mtg-progress-track">
+          <div id="mtgProgressBar" class="mtg-progress-fill"></div>
+          <div id="mtgProgressLabel" class="mtg-progress-label"></div>
+        </div>
+      </div>
+      <div id="mtgChartWrap" style="position:relative;height:260px;width:100%"><canvas id="mtgChart"></canvas></div>
+    </div>
+    ` : ''}
+    <div class="chart-card">
+      <div class="chart-title">貯蓄残高推移 &amp; 年間キャッシュフロー</div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#1e4d8c"></div>貯蓄残高（左軸）</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#0a6640"></div>年間CF黒字（右軸）</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#8a1c1c"></div>年間CF赤字（右軸）</div>
+      </div>
+      <div id="chartWrap"><canvas id="cfChart"></canvas></div>
+    </div>
+    ${allEvents.length > 0 ? `<div class="card"><div class="card-title">主要ライフイベント</div><div class="events-wrap">${evChips}</div></div>` : ''}
+    <div class="chart-card">
+      <div class="chart-title">年次キャッシュフロー詳細表</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th style="text-align:left">年齢・イベント</th>
+            <th>収入（万円）</th>
+            <th>支出（万円）</th>
+            <th>CF（万円）</th>
+            <th>貯蓄残高（万円）</th>
+            ${loanAmount > 0 ? '<th>ローン残高（万円）</th>' : ''}
+          </tr></thead>
+          <tbody>${tableHTML}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  const every5    = rows.filter((_, i) => i % 5 === 0 || i === rows.length - 1);
+  const labels    = every5.map(r => r.age + '歳');
+  const assetData = every5.map(r => r.assets);
+  const cfData    = every5.map(r => r.cf);
+
+  if (cfChart) { cfChart.destroy(); cfChart = null; }
+  const ctx = document.getElementById('cfChart');
+  if (!ctx) return;
+
+  cfChart = new Chart(ctx, {
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'line', label: '貯蓄残高', data: assetData,
+          borderColor: '#1e4d8c', backgroundColor: 'rgba(30,77,140,0.07)',
+          borderWidth: 2.5, tension: 0.35, pointRadius: 3, pointBackgroundColor: '#1e4d8c',
+          yAxisID: 'y'
+        },
+        {
+          type: 'bar', label: '年間CF', data: cfData,
+          backgroundColor: cfData.map(v => v >= 0 ? 'rgba(10,102,64,0.55)' : 'rgba(138,28,28,0.6)'),
+          borderRadius: 3, yAxisID: 'y2'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => c.dataset.label + ': ' + fmt(c.parsed.y) + '万円' } }
+      },
+      scales: {
+        y: {
+          position: 'left',
+          title: { display: true, text: '貯蓄残高（万円）', color: '#1e4d8c', font: { size: 11 } },
+          grid: { color: 'rgba(0,0,0,0.06)' },
+          ticks: { color: '#1e4d8c', callback: v => v.toLocaleString() }
+        },
+        y2: {
+          position: 'right',
+          title: { display: true, text: '年間CF（万円）', color: '#0a6640', font: { size: 11 } },
+          grid: { display: false },
+          ticks: { color: '#0a6640', callback: v => v.toLocaleString() }
+        }
+      }
+    }
+  });
+
+  // ─── 住宅ローン残高グラフ ────────────────────────
+  if (loanAmount > 0) {
+    // 購入年〜完済年の行だけ抽出（+前後1行ずつ文脈用）
+    const mtgRows = rows.filter(r => r.y >= purchaseYear - 1 && r.y <= purchaseYear + loanTerm + 1);
+    const mtgLabels  = mtgRows.map(r => r.age + '歳');
+    const mtgDebt    = mtgRows.map(r => r.mortgageBalance);
+    const mtgAssets  = mtgRows.map(r => r.assets);
+
+    // プログレスバー（現在時点のローン進捗 = purchaseYear年度が0なので、今は開始直後）
+    // 購入直後の残高 = loanAmount、完済時 = 0
+    const currentMtgBalance = rows[purchaseYear] ? rows[purchaseYear].mortgageBalance : loanAmount;
+    const paidPct = loanAmount > 0 ? Math.round((1 - currentMtgBalance / loanAmount) * 100) : 100;
+    const progressBar = document.getElementById('mtgProgressBar');
+    const progressLabel = document.getElementById('mtgProgressLabel');
+    if (progressBar) {
+      progressBar.style.width = paidPct + '%';
+      if (progressLabel) progressLabel.textContent = paidPct + '% 返済済み';
+    }
+
+    const mtgCtx = document.getElementById('mtgChart');
+    if (!mtgCtx) return;
+
+    new Chart(mtgCtx, {
+      data: {
+        labels: mtgLabels,
+        datasets: [
+          {
+            type: 'line',
+            label: 'ローン残高',
+            data: mtgDebt,
+            borderColor: '#c04a1e',
+            backgroundColor: 'rgba(192,74,30,0.12)',
+            borderWidth: 2.5,
+            tension: 0.2,
+            pointRadius: 3,
+            pointBackgroundColor: '#c04a1e',
+            fill: true,
+            yAxisID: 'y'
+          },
+          {
+            type: 'line',
+            label: '金融資産残高',
+            data: mtgAssets,
+            borderColor: '#1e4d8c',
+            backgroundColor: 'rgba(30,77,140,0.05)',
+            borderWidth: 2,
+            tension: 0.35,
+            pointRadius: 2,
+            borderDash: [5, 4],
+            pointBackgroundColor: '#1e4d8c',
+            fill: false,
+            yAxisID: 'y'
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: c => {
+                if (c.parsed.y === 0 && c.dataset.label === 'ローン残高') return 'ローン残高: 完済';
+                return c.dataset.label + ': ' + fmt(c.parsed.y) + '万円';
+              }
+            }
+          },
+          annotation: {
+            annotations: {
+              zeroLine: {
+                type: 'line',
+                yMin: 0, yMax: 0,
+                borderColor: 'rgba(0,0,0,0.15)',
+                borderWidth: 1,
+                borderDash: [3, 3]
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            position: 'left',
+            min: 0,
+            title: { display: true, text: '残高（万円）', color: '#666', font: { size: 11 } },
+            grid: { color: 'rgba(0,0,0,0.06)' },
+            ticks: { callback: v => v.toLocaleString() }
+          },
+          x: {
+            ticks: { maxRotation: 45, autoSkip: true, maxTicksLimit: 12 }
+          }
+        }
+      }
+    });
+  }
+} // end runSimulation
+
+// ── セッション認証（login.htmlからのリダイレクト前提） ────────
+(function(){
+  const SESSION_KEY = 'lps_session';
+  const s = JSON.parse(localStorage.getItem(SESSION_KEY)||'null');
+  // セッションなし or 8時間超過 → login.htmlへ
+  if (!s || s.role !== 'user' || (Date.now() - s.at) > 8*60*60*1000) {
+    // ログインオーバーレイを表示（login.htmlに遷移しない場合のフォールバック）
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
+  } else {
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+  }
+})();
+
+// ── ログインオーバーレイからのログイン（フォールバック用）────
+function doLogin() {
+  const STORAGE_KEY = 'lps_users';
+  const SESSION_KEY = 'lps_session';
+  const id  = document.getElementById('loginId').value.trim();
+  const pw  = document.getElementById('loginPw').value.trim();
+  const err = document.getElementById('loginErr');
+  const today = new Date();
+  const ymd = today.getFullYear().toString()
+    + String(today.getMonth()+1).padStart(2,'0')
+    + String(today.getDate()).padStart(2,'0');
+
+  // 旧来の日付PW
+  if (id === 'NewArcLLC' && pw === ymd) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ id, role:'user', at: Date.now() }));
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+    return;
+  }
+  // 管理者発行ユーザー
+  try {
+    const users = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+    const user  = users.find(u => u.id === id && u.pw === pw && u.active);
+    if (user && !(user.expiresAt && Date.now() > user.expiresAt)) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ id, role:'user', at: Date.now() }));
+      document.getElementById('loginOverlay').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+      return;
+    }
+  } catch {}
+
+  err.textContent = 'IDまたはパスワードが正しくありません';
+  err.style.display = 'block';
+  document.getElementById('loginPw').value = '';
+  document.getElementById('loginPw').focus();
+}
+
+function clearLoginErr() {
+  document.getElementById('loginErr').style.display = 'none';
+}
+
+function togglePw() {
+  const pw = document.getElementById('loginPw');
+  const icon = document.getElementById('eyeIcon');
+  if (pw.type === 'password') {
+    pw.type = 'text';
+    icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    pw.type = 'password';
+    icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
+function openManual() {
+  window.open('manual.html', '_blank', 'noopener,noreferrer');
+}
+
+// マニュアル背景クリックで閉じる（互換性のため残存、実際はリンクで開く）
+// Enterキーでログイン
+document.getElementById('loginId').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') document.getElementById('loginPw').focus();
+});
+
+// 初期化
+toggleDualFields();
+updateChildFields();
+calcExpTotal();
+calcEvTotal();
+</script>
+</body>
+</html>
