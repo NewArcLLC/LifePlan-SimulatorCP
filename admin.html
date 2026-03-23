@@ -8,20 +8,15 @@
 <style>
 :root{
   --bg:#f7f5f0;--surface:#fff;--surface2:#f0ede6;
-  --border:#e2ddd5;--border2:#ccc7bc;
-  --text:#1a1714;--text2:#5c5751;--text3:#9b9590;
+  --border:#e2ddd5;--text:#1a1714;--text2:#5c5751;--text3:#9b9590;
   --accent:#1e4d8c;--accent-light:#e8eef7;--accent-mid:#3a72c0;
-  --ok:#0a6640;--ok-bg:#e6f4ed;
-  --warn:#8a5a00;--warn-bg:#fdf3e0;
+  --ok:#0a6640;--ok-bg:#e6f4ed;--warn:#8a5a00;--warn-bg:#fdf3e0;
   --ng:#8a1c1c;--ng-bg:#fce8e8;
   --radius:10px;--radius-sm:6px;
-  --shadow:0 2px 12px rgba(0,0,0,.07);
-  --shadow-lg:0 8px 32px rgba(0,0,0,.12);
+  --shadow:0 2px 12px rgba(0,0,0,.07);--shadow-lg:0 8px 32px rgba(0,0,0,.12);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
-
-/* Header */
 .header{
   background:var(--accent);color:#fff;padding:1rem 2rem;
   display:flex;align-items:center;gap:1rem;
@@ -32,38 +27,26 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .header-sub{font-size:10px;opacity:.7;margin-top:1px}
 .header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .admin-badge{font-size:10px;padding:3px 10px;background:rgba(255,255,255,.2);border-radius:999px;font-weight:700}
-.logout-btn{
-  padding:6px 14px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
-  border-radius:var(--radius-sm);color:#fff;font-size:12px;font-family:inherit;cursor:pointer;
-  transition:background .15s;
-}
+.logout-btn{padding:6px 14px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:var(--radius-sm);color:#fff;font-size:12px;font-family:inherit;cursor:pointer;transition:background .15s}
 .logout-btn:hover{background:rgba(255,255,255,.25)}
-
-/* Layout */
 .container{max-width:1000px;margin:0 auto;padding:1.5rem 1rem 3rem}
-.page-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:1.5rem;display:flex;align-items:center;gap:8px}
-
-/* Cards */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.25rem;box-shadow:var(--shadow)}
-.card-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
-
-/* Form */
+.card-title{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:1rem;padding-bottom:.65rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-title-left{display:flex;align-items:center;gap:8px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .form-group{display:flex;flex-direction:column;gap:5px}
-.form-group.full{grid-column:1/-1}
 label{font-size:11px;font-weight:700;color:var(--text2)}
-input,select{
+input[type=text],select{
   width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);
   background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;
   transition:border-color .15s,box-shadow .15s;
 }
-input:focus,select:focus{outline:none;border-color:var(--accent-mid);box-shadow:0 0 0 3px rgba(58,114,192,.1);background:#fff}
+input[type=text]:focus,select:focus{outline:none;border-color:var(--accent-mid);box-shadow:0 0 0 3px rgba(58,114,192,.1);background:#fff}
 .hint{font-size:10px;color:var(--text3)}
-
-/* Buttons */
-.btn{padding:9px 22px;font-size:13px;font-weight:700;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
-.btn-primary{background:var(--accent);color:#fff;border:1px solid var(--accent)}
+.btn{padding:9px 22px;font-size:13px;font-weight:700;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:6px;border:1px solid transparent}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 .btn-primary:hover{background:#163d72}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
 .btn-sm{padding:5px 12px;font-size:11px;font-weight:500;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:4px;border:1px solid}
 .btn-danger{background:var(--ng-bg);color:var(--ng);border-color:#f0a0a0}
 .btn-danger:hover{background:#f8d0d0}
@@ -73,27 +56,10 @@ input:focus,select:focus{outline:none;border-color:var(--accent-mid);box-shadow:
 .btn-ok:hover{background:#c0edda}
 .btn-copy{background:var(--accent-light);color:var(--accent);border-color:#c0d0ea}
 .btn-copy:hover{background:#d8e8f8}
-
-/* Toast */
-.toast{
-  position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;
-  background:var(--ok);color:#fff;
-  padding:10px 18px;border-radius:var(--radius-sm);
-  font-size:13px;font-weight:500;
-  box-shadow:var(--shadow-lg);
-  opacity:0;transform:translateY(8px);
-  transition:all .25s;pointer-events:none;
-}
-.toast.show{opacity:1;transform:none}
-.toast.error{background:var(--ng)}
-
-/* Stats */
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem}
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.85rem 1rem;box-shadow:var(--shadow);text-align:center}
 .stat-label{font-size:10px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
 .stat-val{font-size:22px;font-weight:700;color:var(--text)}
-
-/* Table */
 .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius)}
 table{width:100%;border-collapse:collapse;font-size:12px}
 thead th{background:var(--accent);color:#fff;padding:8px 12px;font-weight:500;font-size:11px;text-align:left;white-space:nowrap}
@@ -105,35 +71,27 @@ tbody tr:hover{background:var(--surface2)}
 .status-inactive{background:var(--surface2);color:var(--text3)}
 .status-expired{background:var(--ng-bg);color:var(--ng)}
 .actions{display:flex;gap:6px;flex-wrap:wrap}
-
-/* Password display */
-.pw-display{
-  display:flex;align-items:center;gap:8px;
-  background:var(--surface2);border-radius:var(--radius-sm);
-  padding:.75rem 1rem;margin-top:1rem;
-  border:1px solid var(--border);
-}
-.pw-display-label{font-size:11px;color:var(--text3);margin-bottom:2px}
-.pw-display-val{font-size:18px;font-weight:700;color:var(--accent);letter-spacing:.05em;font-family:monospace}
-
-/* Modal */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center}
-.modal-bg.open{display:flex}
-.modal{background:#fff;border-radius:var(--radius);padding:1.5rem;width:100%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,.3)}
-.modal-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:1rem}
-.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:1.25rem}
-
-/* Info box */
 .info-box{background:var(--accent-light);border:1px solid #c0d0ea;border-radius:var(--radius-sm);padding:.65rem 1rem;font-size:12px;color:var(--accent);margin-bottom:1rem;display:flex;gap:8px}
-
-/* Generated account card */
 .gen-card{background:var(--ok-bg);border:1px solid #9dd9b8;border-radius:var(--radius-sm);padding:1rem 1.25rem;margin-top:1rem;display:none}
 .gen-card.show{display:block}
 .gen-row{display:flex;align-items:center;gap:12px;margin-bottom:6px}
 .gen-row:last-child{margin-bottom:0}
-.gen-key{font-size:11px;font-weight:700;color:var(--ok);min-width:70px}
-.gen-val{font-size:14px;font-weight:700;color:var(--text);letter-spacing:.03em}
-
+.gen-key{font-size:11px;font-weight:700;color:var(--ok);min-width:80px;flex-shrink:0}
+.gen-val{font-size:14px;font-weight:700;color:var(--text);word-break:break-all}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:var(--radius);padding:1.5rem;width:100%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,.3)}
+.modal-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:.75rem}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:1.25rem}
+.toast{
+  position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;
+  background:var(--ok);color:#fff;
+  padding:10px 18px;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:500;box-shadow:var(--shadow-lg);
+  opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:none}
+.toast.error{background:var(--ng)}
 @media(max-width:600px){
   .stats,.form-grid{grid-template-columns:1fr 1fr}
   .header{padding:1rem}
@@ -150,27 +108,29 @@ tbody tr:hover{background:var(--surface2)}
     <div class="header-sub">LifePlan Simulator — ユーザー管理</div>
   </div>
   <div class="header-right">
-    <span class="admin-badge" id="adminName">管理者</span>
+    <span class="admin-badge">管理者</span>
     <button class="logout-btn" onclick="doLogout()">ログアウト</button>
   </div>
 </header>
 
 <div class="container">
-  <div class="stats" id="statsArea">
-    <div class="stat"><div class="stat-label">総ユーザー数</div><div class="stat-val" id="statTotal">0</div></div>
-    <div class="stat"><div class="stat-label">有効ユーザー</div><div class="stat-val" id="statActive" style="color:var(--ok)">0</div></div>
-    <div class="stat"><div class="stat-label">無効・期限切れ</div><div class="stat-val" id="statInactive" style="color:var(--ng)">0</div></div>
+  <div class="stats">
+    <div class="stat"><div class="stat-label">総ユーザー数</div><div class="stat-val" id="statTotal">—</div></div>
+    <div class="stat"><div class="stat-label">有効ユーザー</div><div class="stat-val" id="statActive" style="color:var(--ok)">—</div></div>
+    <div class="stat"><div class="stat-label">無効・期限切れ</div><div class="stat-val" id="statInactive" style="color:var(--ng)">—</div></div>
   </div>
 
-  <!-- ユーザー発行カード -->
+  <!-- 新規発行 -->
   <div class="card">
     <div class="card-title">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-      新規ユーザーを発行
+      <div class="card-title-left">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        新規ユーザーを発行
+      </div>
     </div>
     <div class="info-box">
       <span>ℹ️</span>
-      <span>発行したIDとパスワードをお客様にお伝えください。有効期限を設定することで期限後は自動的にログイン不可になります。</span>
+      <span>発行したIDとパスワードはFirebaseに保存され、どのデバイスからでもログイン可能です。</span>
     </div>
     <div class="form-grid">
       <div class="form-group">
@@ -182,10 +142,7 @@ tbody tr:hover{background:var(--surface2)}
         <label>パスワード <span style="color:var(--ng)">*</span></label>
         <div style="display:flex;gap:6px">
           <input type="text" id="newPw" placeholder="パスワードを入力または自動生成" style="flex:1" oninput="clearGenCard()">
-          <button class="btn btn-sm btn-copy" onclick="genPw()" title="ランダム生成" style="white-space:nowrap;flex-shrink:0">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-            自動生成
-          </button>
+          <button class="btn btn-sm btn-copy" onclick="genPw()" style="white-space:nowrap;flex-shrink:0">自動生成</button>
         </div>
         <span class="hint">8文字以上を推奨</span>
       </div>
@@ -209,35 +166,27 @@ tbody tr:hover{background:var(--surface2)}
       </div>
     </div>
     <div style="margin-top:1rem">
-      <button class="btn btn-primary" onclick="issueUser()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-        ユーザーを発行する
-      </button>
+      <button class="btn btn-primary" id="issueBtn" onclick="issueUser()">ユーザーを発行する</button>
     </div>
-
-    <!-- 発行結果カード -->
     <div class="gen-card" id="genCard">
-      <div style="font-size:12px;font-weight:700;color:var(--ok);margin-bottom:8px">✅ ユーザーを発行しました。以下の情報をお客様にお伝えください。</div>
+      <div style="font-size:12px;font-weight:700;color:var(--ok);margin-bottom:8px">✅ 発行完了。以下の情報をお客様にお伝えください。</div>
       <div class="gen-row"><span class="gen-key">ログインID</span><span class="gen-val" id="genId">—</span></div>
       <div class="gen-row"><span class="gen-key">パスワード</span><span class="gen-val" id="genPwDisp">—</span></div>
       <div class="gen-row"><span class="gen-key">有効期限</span><span class="gen-val" id="genExpiry">—</span></div>
-      <div class="gen-row"><span class="gen-key">ログインURL</span><span style="font-size:11px;color:var(--accent)" id="genUrl">—</span></div>
-      <div style="margin-top:.85rem;display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-sm btn-copy" onclick="copyGenInfo()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          発行情報をコピー
-        </button>
+      <div class="gen-row"><span class="gen-key">ログインURL</span><span class="gen-val" id="genUrl" style="font-size:11px;color:var(--accent)">—</span></div>
+      <div style="margin-top:.85rem">
+        <button class="btn btn-sm btn-copy" onclick="copyGenInfo()">発行情報をコピー</button>
       </div>
     </div>
   </div>
 
   <!-- ユーザー一覧 -->
   <div class="card">
-    <div class="card-title" style="justify-content:space-between">
-      <span style="display:flex;align-items:center;gap:8px">
+    <div class="card-title">
+      <div class="card-title-left">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         発行済みユーザー一覧
-      </span>
+      </div>
       <button class="btn btn-sm btn-danger" onclick="confirmClearAll()">全削除</button>
     </div>
     <div class="table-wrap">
@@ -254,7 +203,7 @@ tbody tr:hover{background:var(--surface2)}
           </tr>
         </thead>
         <tbody id="userTableBody">
-          <tr><td colspan="7" style="text-align:center;color:var(--text3);padding:2rem">発行済みユーザーはいません</td></tr>
+          <tr><td colspan="7" style="text-align:center;color:var(--text3);padding:2rem">読み込み中...</td></tr>
         </tbody>
       </table>
     </div>
@@ -267,7 +216,7 @@ tbody tr:hover{background:var(--surface2)}
     <div class="modal-title">⚠️ ユーザーを削除しますか？</div>
     <div style="font-size:13px;color:var(--text2)">削除すると元に戻せません。</div>
     <div class="modal-btns">
-      <button class="btn btn-sm btn-warn" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-sm btn-warn" onclick="closeModal('deleteModal')">キャンセル</button>
       <button class="btn btn-sm btn-danger" id="deleteConfirmBtn">削除する</button>
     </div>
   </div>
@@ -277,9 +226,9 @@ tbody tr:hover{background:var(--surface2)}
 <div class="modal-bg" id="clearModal">
   <div class="modal">
     <div class="modal-title">⚠️ 全ユーザーを削除しますか？</div>
-    <div style="font-size:13px;color:var(--text2)">発行済みの全ユーザーを削除します。この操作は元に戻せません。</div>
+    <div style="font-size:13px;color:var(--text2)">発行済みの全ユーザーを削除します。元に戻せません。</div>
     <div class="modal-btns">
-      <button class="btn btn-sm btn-warn" onclick="document.getElementById('clearModal').classList.remove('open')">キャンセル</button>
+      <button class="btn btn-sm btn-warn" onclick="closeModal('clearModal')">キャンセル</button>
       <button class="btn btn-sm btn-danger" onclick="clearAllUsers()">すべて削除する</button>
     </div>
   </div>
@@ -287,191 +236,88 @@ tbody tr:hover{background:var(--surface2)}
 
 <div class="toast" id="toast"></div>
 
-<script>
-const STORAGE_KEY = 'lps_users';
-const SESSION_KEY = 'lps_session';
-const ADMIN_ID    = 'NewArcAdmin';
-const ADMIN_PW    = 'NewArcAdmin2026';
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ── 認証チェック ──────────────────────────────────
-(function(){
-  const s = JSON.parse(localStorage.getItem(SESSION_KEY)||'null');
-  if (!s || s.role !== 'admin') {
-    location.href = 'login.html';
-    return;
-  }
-  document.getElementById('adminName').textContent = s.id + '（管理者）';
+const firebaseConfig = {
+  apiKey: "AIzaSyCjwSEuLeBdgfrG4yarz6ZfynwtH7fEi9Y",
+  authDomain: "lifeplansimulator-e90f1.firebaseapp.com",
+  projectId: "lifeplansimulator-e90f1",
+  storageBucket: "lifeplansimulator-e90f1.firebasestorage.app",
+  messagingSenderId: "870725147207",
+  appId: "1:870725147207:web:04ebfa5b6af3787e262f62"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const SESSION_KEY = 'lps_session';
+
+// 認証チェック
+(function() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+    if (!s || s.role !== 'admin' || (Date.now() - s.at) > 8 * 60 * 60 * 1000) {
+      location.href = 'login.html';
+    }
+  } catch(e) { location.href = 'login.html'; }
 })();
 
-function doLogout() {
-  localStorage.removeItem(SESSION_KEY);
+window.doLogout = function() {
+  sessionStorage.removeItem(SESSION_KEY);
   location.href = 'login.html';
+};
+
+// ── ユーザー読み込み ──────────────────────────────
+async function loadUsers() {
+  try {
+    const snap = await getDocs(collection(db, 'users'));
+    const users = [];
+    snap.forEach(d => users.push({ id: d.id, ...d.data() }));
+    renderTable(users);
+    updateStats(users);
+  } catch(e) {
+    document.getElementById('userTableBody').innerHTML =
+      '<tr><td colspan="7" style="text-align:center;color:var(--ng);padding:2rem">読み込みエラー。ページを再読み込みしてください。</td></tr>';
+  }
 }
 
-// ── データ管理 ────────────────────────────────────
-function getUsers() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); } catch { return []; }
-}
-function saveUsers(users) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-}
-
-// ── ランダムPW生成 ────────────────────────────────
-function genPw() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-  let pw = '';
-  for (let i = 0; i < 10; i++) pw += chars[Math.floor(Math.random() * chars.length)];
-  document.getElementById('newPw').value = pw;
-  clearGenCard();
-}
-
-// ── ユーザー発行 ──────────────────────────────────
-function issueUser() {
-  const id     = document.getElementById('newId').value.trim();
-  const pw     = document.getElementById('newPw').value.trim();
-  const note   = document.getElementById('newNote').value.trim();
-  const expiry = parseInt(document.getElementById('newExpiry').value);
-
-  if (!id) { showToast('ログインIDを入力してください', true); return; }
-  if (!pw) { showToast('パスワードを入力してください', true); return; }
-  if (pw.length < 4) { showToast('パスワードは4文字以上にしてください', true); return; }
-  if (id === ADMIN_ID) { showToast('そのIDは使用できません', true); return; }
-
-  const users = getUsers();
-  if (users.find(u => u.id === id)) { showToast('そのIDはすでに発行済みです', true); return; }
-
-  const now = Date.now();
-  const expiresAt = expiry > 0 ? now + expiry * 24 * 60 * 60 * 1000 : null;
-  const user = { id, pw, note, active: true, createdAt: now, expiresAt };
-  users.push(user);
-  saveUsers(users);
-
-  // 発行結果表示
-  const loginUrl = location.origin + location.pathname.replace('admin.html','') + 'login.html';
-  document.getElementById('genId').textContent = id;
-  document.getElementById('genPwDisp').textContent = pw;
-  document.getElementById('genExpiry').textContent = expiresAt
-    ? new Date(expiresAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}) + ' まで'
-    : '無期限';
-  document.getElementById('genUrl').textContent = loginUrl;
-  document.getElementById('genCard').classList.add('show');
-
-  document.getElementById('newId').value = '';
-  document.getElementById('newPw').value = '';
-  document.getElementById('newNote').value = '';
-
-  renderTable();
-  updateStats();
-  showToast('ユーザーを発行しました');
-}
-
-function clearGenCard() {
-  document.getElementById('genCard').classList.remove('show');
-}
-
-function copyGenInfo() {
-  const id      = document.getElementById('genId').textContent;
-  const pw      = document.getElementById('genPwDisp').textContent;
-  const expiry  = document.getElementById('genExpiry').textContent;
-  const url     = document.getElementById('genUrl').textContent;
-  const text = `【LifePlan Simulator ログイン情報】\nログインID: ${id}\nパスワード: ${pw}\n有効期限: ${expiry}\nログインURL: ${url}`;
-  navigator.clipboard.writeText(text).then(() => showToast('コピーしました'));
-}
-
-// ── テーブル描画 ──────────────────────────────────
-function renderTable() {
-  const users = getUsers();
+function renderTable(users) {
   const tbody = document.getElementById('userTableBody');
   if (users.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:2rem">発行済みユーザーはいません</td></tr>';
     return;
   }
   const now = Date.now();
-  tbody.innerHTML = users.map((u, idx) => {
+  tbody.innerHTML = users.map(u => {
     const isExpired = u.expiresAt && now > u.expiresAt;
-    const statusClass = !u.active ? 'status-inactive' : isExpired ? 'status-expired' : 'status-active';
-    const statusText  = !u.active ? '無効' : isExpired ? '期限切れ' : '有効';
-    const expText = u.expiresAt
-      ? new Date(u.expiresAt).toLocaleDateString('ja-JP',{month:'2-digit',day:'2-digit',year:'numeric'})
+    const sc = !u.active ? 'status-inactive' : isExpired ? 'status-expired' : 'status-active';
+    const st = !u.active ? '無効' : isExpired ? '期限切れ' : '有効';
+    const exp = u.expiresAt
+      ? new Date(u.expiresAt).toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'})
       : '無期限';
-    const createdText = new Date(u.createdAt).toLocaleDateString('ja-JP',{month:'2-digit',day:'2-digit'})
+    const created = new Date(u.createdAt).toLocaleDateString('ja-JP',{month:'2-digit',day:'2-digit'})
       + ' ' + new Date(u.createdAt).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+    const canToggle = !u.active || isExpired;
     return `<tr>
       <td><strong>${esc(u.id)}</strong></td>
       <td style="color:var(--text2)">${esc(u.note||'—')}</td>
-      <td style="font-family:monospace;font-size:12px">${esc(u.pw)}</td>
-      <td style="font-size:11px">${expText}</td>
-      <td style="font-size:11px;color:var(--text3)">${createdText}</td>
-      <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+      <td style="font-family:monospace">${esc(u.pw)}</td>
+      <td style="font-size:11px">${exp}</td>
+      <td style="font-size:11px;color:var(--text3)">${created}</td>
+      <td><span class="status-badge ${sc}">${st}</span></td>
       <td>
         <div class="actions">
-          ${u.active && !isExpired
-            ? `<button class="btn btn-sm btn-warn" onclick="toggleUser(${idx})">無効化</button>`
-            : `<button class="btn btn-sm btn-ok" onclick="toggleUser(${idx})">有効化</button>`}
-          <button class="btn btn-sm btn-copy" onclick="copyUserInfo(${idx})">コピー</button>
-          <button class="btn btn-sm btn-danger" onclick="confirmDelete(${idx})">削除</button>
+          <button class="btn btn-sm ${canToggle?'btn-ok':'btn-warn'}" onclick="toggleUser('${esc(u.id)}',${!u.active})">${u.active&&!isExpired?'無効化':'有効化'}</button>
+          <button class="btn btn-sm btn-copy" onclick="copyInfo('${esc(u.id)}','${esc(u.pw)}',${u.expiresAt||0})">コピー</button>
+          <button class="btn btn-sm btn-danger" onclick="confirmDelete('${esc(u.id)}')">削除</button>
         </div>
       </td>
     </tr>`;
   }).join('');
 }
 
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// ── ユーザー操作 ──────────────────────────────────
-function toggleUser(idx) {
-  const users = getUsers();
-  users[idx].active = !users[idx].active;
-  saveUsers(users);
-  renderTable();
-  updateStats();
-  showToast(users[idx].active ? '有効化しました' : '無効化しました');
-}
-
-function copyUserInfo(idx) {
-  const u = getUsers()[idx];
-  const loginUrl = location.origin + location.pathname.replace('admin.html','') + 'login.html';
-  const expText = u.expiresAt
-    ? new Date(u.expiresAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}) + ' まで'
-    : '無期限';
-  const text = `【LifePlan Simulator ログイン情報】\nログインID: ${u.id}\nパスワード: ${u.pw}\n有効期限: ${expText}\nログインURL: ${loginUrl}`;
-  navigator.clipboard.writeText(text).then(() => showToast('コピーしました'));
-}
-
-let pendingDeleteIdx = null;
-function confirmDelete(idx) {
-  pendingDeleteIdx = idx;
-  document.getElementById('deleteModal').classList.add('open');
-  document.getElementById('deleteConfirmBtn').onclick = () => {
-    const users = getUsers();
-    users.splice(pendingDeleteIdx, 1);
-    saveUsers(users);
-    renderTable();
-    updateStats();
-    closeModal();
-    showToast('削除しました');
-  };
-}
-function closeModal() {
-  document.getElementById('deleteModal').classList.remove('open');
-}
-
-function confirmClearAll() {
-  document.getElementById('clearModal').classList.add('open');
-}
-function clearAllUsers() {
-  saveUsers([]);
-  renderTable();
-  updateStats();
-  document.getElementById('clearModal').classList.remove('open');
-  showToast('全ユーザーを削除しました');
-}
-
-// ── 統計更新 ──────────────────────────────────────
-function updateStats() {
-  const users = getUsers();
+function updateStats(users) {
   const now = Date.now();
   const active = users.filter(u => u.active && !(u.expiresAt && now > u.expiresAt)).length;
   document.getElementById('statTotal').textContent   = users.length;
@@ -479,18 +325,138 @@ function updateStats() {
   document.getElementById('statInactive').textContent = users.length - active;
 }
 
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── ユーザー発行 ──────────────────────────────────
+window.genPw = function() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let pw = '';
+  for (let i = 0; i < 10; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+  document.getElementById('newPw').value = pw;
+  clearGenCard();
+};
+
+window.clearGenCard = function() {
+  document.getElementById('genCard').classList.remove('show');
+};
+
+window.issueUser = async function() {
+  const id     = document.getElementById('newId').value.trim();
+  const pw     = document.getElementById('newPw').value.trim();
+  const note   = document.getElementById('newNote').value.trim();
+  const expiry = parseInt(document.getElementById('newExpiry').value);
+  const btn    = document.getElementById('issueBtn');
+
+  if (!id) { showToast('ログインIDを入力してください', true); return; }
+  if (!pw) { showToast('パスワードを入力してください', true); return; }
+  if (pw.length < 4) { showToast('パスワードは4文字以上にしてください', true); return; }
+
+  btn.disabled = true;
+  btn.textContent = '発行中...';
+
+  try {
+    const existing = await getDoc(doc(db, 'users', id));
+    if (existing.exists()) { showToast('そのIDはすでに発行済みです', true); return; }
+
+    const now = Date.now();
+    const expiresAt = expiry > 0 ? now + expiry * 24 * 60 * 60 * 1000 : null;
+    await setDoc(doc(db, 'users', id), { pw, note, active: true, createdAt: now, expiresAt });
+
+    const loginUrl = location.origin + location.pathname.replace('admin.html','') + 'login.html';
+    document.getElementById('genId').textContent = id;
+    document.getElementById('genPwDisp').textContent = pw;
+    document.getElementById('genExpiry').textContent = expiresAt
+      ? new Date(expiresAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}) + ' まで'
+      : '無期限';
+    document.getElementById('genUrl').textContent = loginUrl;
+    document.getElementById('genCard').classList.add('show');
+
+    document.getElementById('newId').value = '';
+    document.getElementById('newPw').value = '';
+    document.getElementById('newNote').value = '';
+
+    showToast('ユーザーを発行しました');
+    loadUsers();
+  } catch(e) {
+    showToast('発行エラーが発生しました', true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'ユーザーを発行する';
+  }
+};
+
+window.copyGenInfo = function() {
+  const id     = document.getElementById('genId').textContent;
+  const pw     = document.getElementById('genPwDisp').textContent;
+  const expiry = document.getElementById('genExpiry').textContent;
+  const url    = document.getElementById('genUrl').textContent;
+  const text = `【LifePlan Simulator ログイン情報】\nログインID: ${id}\nパスワード: ${pw}\n有効期限: ${expiry}\nログインURL: ${url}`;
+  navigator.clipboard.writeText(text).then(() => showToast('コピーしました'));
+};
+
+window.copyInfo = function(id, pw, expiresAt) {
+  const url = location.origin + location.pathname.replace('admin.html','') + 'login.html';
+  const exp = expiresAt ? new Date(expiresAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}) + ' まで' : '無期限';
+  const text = `【LifePlan Simulator ログイン情報】\nログインID: ${id}\nパスワード: ${pw}\n有効期限: ${exp}\nログインURL: ${url}`;
+  navigator.clipboard.writeText(text).then(() => showToast('コピーしました'));
+};
+
+// ── 有効化/無効化 ─────────────────────────────────
+window.toggleUser = async function(id, newActive) {
+  try {
+    await updateDoc(doc(db, 'users', id), { active: newActive });
+    showToast(newActive ? '有効化しました' : '無効化しました');
+    loadUsers();
+  } catch(e) { showToast('更新エラー', true); }
+};
+
+// ── 削除 ──────────────────────────────────────────
+window.confirmDelete = function(id) {
+  document.getElementById('deleteModal').classList.add('open');
+  document.getElementById('deleteConfirmBtn').onclick = async () => {
+    try {
+      await deleteDoc(doc(db, 'users', id));
+      closeModal('deleteModal');
+      showToast('削除しました');
+      loadUsers();
+    } catch(e) { showToast('削除エラー', true); }
+  };
+};
+
+window.confirmClearAll = function() {
+  document.getElementById('clearModal').classList.add('open');
+};
+
+window.clearAllUsers = async function() {
+  try {
+    const snap = await getDocs(collection(db, 'users'));
+    const dels = [];
+    snap.forEach(d => dels.push(deleteDoc(doc(db, 'users', d.id))));
+    await Promise.all(dels);
+    closeModal('clearModal');
+    showToast('全ユーザーを削除しました');
+    loadUsers();
+  } catch(e) { showToast('削除エラー', true); }
+};
+
+window.closeModal = function(id) {
+  document.getElementById(id).classList.remove('open');
+};
+
 // ── Toast ─────────────────────────────────────────
 function showToast(msg, isErr = false) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'toast' + (isErr ? ' error' : '');
-  requestAnimationFrame(() => { t.classList.add('show'); });
-  setTimeout(() => { t.classList.remove('show'); }, 2500);
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
+window.showToast = showToast;
 
-// ── 初期化 ────────────────────────────────────────
-renderTable();
-updateStats();
+// 初期読み込み
+loadUsers();
 </script>
 </body>
 </html>

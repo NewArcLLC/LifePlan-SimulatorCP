@@ -7,21 +7,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f7f5f0;--surface:#fff;--surface2:#f0ede6;
-  --border:#e2ddd5;--border2:#ccc7bc;
+  --bg:#f7f5f0;--surface:#fff;--border:#e2ddd5;
   --text:#1a1714;--text2:#5c5751;--text3:#9b9590;
-  --accent:#1e4d8c;--accent-light:#e8eef7;--accent-mid:#3a72c0;
+  --accent:#1e4d8c;--accent-mid:#3a72c0;
   --ng:#8a1c1c;--ng-bg:#fce8e8;
-  --radius:10px;--radius-sm:6px;
+  --radius-sm:6px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   font-family:'Noto Sans JP',sans-serif;
-  background:var(--accent);
-  min-height:100vh;
+  background:var(--accent);min-height:100vh;
   display:flex;align-items:center;justify-content:center;
-  padding:1.5rem;
-  position:relative;overflow:hidden;
+  padding:1.5rem;position:relative;overflow:hidden;
 }
 .bg-deco{
   position:absolute;inset:0;pointer-events:none;
@@ -74,15 +71,14 @@ input:focus{outline:none;border-color:var(--accent-mid);box-shadow:0 0 0 3px rgb
   box-shadow:0 4px 12px rgba(30,77,140,.25);
 }
 .login-btn:hover{background:#163d72;transform:translateY(-1px)}
-.login-btn:active{transform:none}
-.links{display:flex;flex-direction:column;gap:6px;margin-top:1rem;align-items:center}
-.link-btn{
-  display:flex;align-items:center;gap:6px;
-  background:none;border:none;font-size:12px;color:var(--text3);font-family:inherit;
-  cursor:pointer;text-decoration:underline;text-underline-offset:2px;
-  transition:color .15s;
+.login-btn:disabled{opacity:.6;transform:none;cursor:not-allowed}
+.loading{display:none;text-align:center;font-size:12px;color:var(--text3);padding:.5rem}
+.links{margin-top:1rem;text-align:center}
+.link-a{
+  font-size:12px;color:var(--text3);
+  text-decoration:underline;text-underline-offset:2px;
 }
-.link-btn:hover{color:var(--accent)}
+.link-a:hover{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -98,92 +94,111 @@ input:focus{outline:none;border-color:var(--accent-mid);box-shadow:0 0 0 3px rgb
   <div class="fields">
     <div class="field">
       <label class="lbl">ログインID</label>
-      <input type="text" id="loginId" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('loginPw').focus()" oninput="clearErr()">
+      <input type="text" id="loginId" autocomplete="username"
+        onkeydown="if(event.key==='Enter')document.getElementById('loginPw').focus()"
+        oninput="clearErr()">
     </div>
     <div class="field">
       <label class="lbl">パスワード</label>
       <div class="pw-wrap">
-        <input type="password" id="loginPw" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" oninput="clearErr()">
+        <input type="password" id="loginPw" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')doLogin()" oninput="clearErr()">
         <button class="eye-btn" onclick="togglePw()" type="button">
-          <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
         </button>
       </div>
     </div>
-    <div class="err" id="loginErr">IDまたはパスワードが正しくありません</div>
-    <button class="login-btn" onclick="doLogin()">ログイン</button>
+    <div class="err" id="loginErr"></div>
+    <div class="loading" id="loading">認証中...</div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">ログイン</button>
   </div>
   <div class="links">
-    <a href="https://newarcllc.github.io/LifePlan-Simulatormanual/" target="_blank" rel="noopener noreferrer" class="link-btn">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      操作マニュアルを見る
-    </a>
+    <a href="https://newarcllc.github.io/LifePlan-Simulatormanual/" target="_blank" rel="noopener noreferrer" class="link-a">操作マニュアルを見る</a>
   </div>
 </div>
 
-<script>
-const STORAGE_KEY = 'lps_users';
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCjwSEuLeBdgfrG4yarz6ZfynwtH7fEi9Y",
+  authDomain: "lifeplansimulator-e90f1.firebaseapp.com",
+  projectId: "lifeplansimulator-e90f1",
+  storageBucket: "lifeplansimulator-e90f1.firebasestorage.app",
+  messagingSenderId: "870725147207",
+  appId: "1:870725147207:web:04ebfa5b6af3787e262f62"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+const ADMIN_ID   = 'NewArcAdmin';
+const ADMIN_PW   = 'NewArcAdmin2026';
 const SESSION_KEY = 'lps_session';
-const ADMIN_ID    = 'NewArcAdmin';
-const ADMIN_PW    = 'NewArcAdmin2026';
 
-function getUsers() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
-}
+// 既存セッションチェック
+(function() {
+  try {
+    const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+    if (!s) return;
+    const valid = (Date.now() - s.at) < 8 * 60 * 60 * 1000;
+    if (valid && s.role === 'user')  { location.href = 'life-plan-simulator.html'; }
+    if (valid && s.role === 'admin') { location.href = 'admin.html'; }
+  } catch(e) {}
+})();
 
-function getTodayYMD() {
-  const d = new Date();
-  return d.getFullYear().toString()
-    + String(d.getMonth()+1).padStart(2,'0')
-    + String(d.getDate()).padStart(2,'0');
-}
+window.doLogin = async function() {
+  const id  = document.getElementById('loginId').value.trim();
+  const pw  = document.getElementById('loginPw').value.trim();
+  const btn = document.getElementById('loginBtn');
+  const loading = document.getElementById('loading');
 
-function doLogin() {
-  const id = document.getElementById('loginId').value.trim();
-  const pw = document.getElementById('loginPw').value.trim();
-  const err = document.getElementById('loginErr');
+  if (!id || !pw) { showErr('IDとパスワードを入力してください'); return; }
 
-  // 管理者ログイン
+  // 管理者ログイン（ローカル判定）
   if (id === ADMIN_ID && pw === ADMIN_PW) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ id, role:'admin', at: Date.now() }));
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ id, role: 'admin', at: Date.now() }));
     location.href = 'admin.html';
     return;
   }
 
-  // 一般ユーザー: 日付PW OR 管理者発行PW
-  const users = getUsers();
-  const ymd   = getTodayYMD();
+  // 一般ユーザー → Firebase で確認
+  btn.disabled = true;
+  loading.style.display = 'block';
 
-  // 旧来の日付PW（NewArcLLC + 今日の日付）は引き続き使用可能
-  if (id === 'NewArcLLC' && pw === ymd) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ id, role:'user', at: Date.now() }));
-    location.href = 'life-plan-simulator.html';
-    return;
-  }
-
-  // 管理者発行ユーザー
-  const user = users.find(u => u.id === id && u.pw === pw && u.active);
-  if (user) {
-    // 有効期限チェック
-    if (user.expiresAt && Date.now() > user.expiresAt) {
-      err.textContent = 'このアカウントの有効期限が切れています';
-      err.style.display = 'block';
-      document.getElementById('loginPw').value = '';
-      return;
+  try {
+    const snap = await getDoc(doc(db, 'users', id));
+    if (!snap.exists()) { showErr('IDまたはパスワードが正しくありません'); return; }
+    const u = snap.data();
+    if (u.pw !== pw)    { showErr('IDまたはパスワードが正しくありません'); return; }
+    if (!u.active)      { showErr('このアカウントは無効化されています'); return; }
+    if (u.expiresAt && Date.now() > u.expiresAt) {
+      showErr('このアカウントの有効期限が切れています'); return;
     }
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ id, role:'user', at: Date.now() }));
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ id, role: 'user', at: Date.now() }));
     location.href = 'life-plan-simulator.html';
-    return;
+  } catch(e) {
+    showErr('接続エラーが発生しました。再度お試しください。');
+  } finally {
+    btn.disabled = false;
+    loading.style.display = 'none';
   }
+};
 
-  err.textContent = 'IDまたはパスワードが正しくありません';
+function showErr(msg) {
+  const err = document.getElementById('loginErr');
+  err.textContent = msg;
   err.style.display = 'block';
   document.getElementById('loginPw').value = '';
   document.getElementById('loginPw').focus();
+  document.getElementById('loginBtn').disabled = false;
+  document.getElementById('loading').style.display = 'none';
 }
-
-function clearErr() { document.getElementById('loginErr').style.display = 'none'; }
-
-function togglePw() {
+window.clearErr  = () => { document.getElementById('loginErr').style.display = 'none'; };
+window.togglePw  = () => {
   const pw = document.getElementById('loginPw');
   const ic = document.getElementById('eyeIcon');
   if (pw.type === 'password') {
@@ -193,15 +208,7 @@ function togglePw() {
     pw.type = 'password';
     ic.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
   }
-}
-
-// すでにセッションがあればシミュレーターへ
-(function(){
-  const s = JSON.parse(localStorage.getItem(SESSION_KEY)||'null');
-  if (s && s.role === 'user' && (Date.now() - s.at) < 8*60*60*1000) {
-    location.href = 'life-plan-simulator.html';
-  }
-})();
+};
 </script>
 </body>
 </html>
